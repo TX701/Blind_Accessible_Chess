@@ -1,4 +1,5 @@
 import settings
+from movement import move_manager
 
 class Piece:
     def __init__(self, type, name, side):
@@ -18,6 +19,27 @@ def get_col_chess(col):
 
 def convert_to_location(col, row):
     return get_col_chess(col) + str((8 - int(row)))
+
+def get_pieces(side, current_board):
+    array_of_pieces = []
+    for r in range(8):
+        row = []
+        for c in range(8):
+            if (current_board[r][c].piece.side == side):
+                array_of_pieces.append(current_board[r][c])
+                
+#checks if given side is in checkmate
+def check(side, current_board):
+    pieces = get_pieces(side)
+    
+    for piece in pieces:
+        possible_moves = move_manager(piece)
+
+        for move in possible_moves:
+            if move.piece.type == "King":
+                return True
+    
+    return False
 
 tiles = []
 
