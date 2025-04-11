@@ -1,4 +1,3 @@
-
 def init():
-    global board
+    global board # creates a global variable board
     board = []
