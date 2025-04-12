@@ -76,8 +76,7 @@ def check_mate(side):
         if (block_check(tile_with_piece) is True):
             return False
     
-    return True
-    
+    return True   
 
 tiles = []
 
@@ -117,8 +116,6 @@ def get_tile_location(location):
         for col in range(len(settings.board[row])):
             if(settings.board[row][col].location == location):
                 return settings.board[row][col]
-            
-    print(settings.board[row][col].location)
     return None
 
 def create_board():

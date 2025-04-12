@@ -70,6 +70,23 @@ def handle_arrow_view(type, viewing_row, viewing_col):
     get_information(viewing_row, viewing_col)
     return viewing_row, viewing_col
 
+def handle_moving(current_tile):
+    tile = get_tile_location(current_tile)
+    read(f'Selected {current_tile} {tile.piece.type}')
+    possible_moves = move_manager(tile)
+
+    if tile.piece.type == None:
+        read("There are no pieces on this tile")
+    elif len(possible_moves) > 0:
+        read("The piece on this tile can move to")
+        for i in possible_moves:
+            read(i.location)
+    else:
+        read("There are no possible places for this tile to move to")
+
+    
+    current_tile = ""
+
 def start_display():
     engine = pyttsx3.init()
 
@@ -98,6 +115,8 @@ def start_display():
                     current_tile = chr(key_value)
                 elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
                     current_tile += chr(key_value)
+                    handle_moving(current_tile)
+                    current_tile = ""
                 elif event.key == pygame.K_UP:
                     viewing_row, viewing_col = handle_arrow_view("U", viewing_row, viewing_col)
                 elif event.key == pygame.K_RIGHT:
