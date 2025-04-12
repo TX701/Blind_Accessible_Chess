@@ -86,7 +86,7 @@ def tile_set_up():
     tiles.append(Tile(1, 0, "B8", Piece("Knight", "♞", 'B')))
     tiles.append(Tile(2, 0, "C8", Piece("Bishop", "♝", 'B')))
     tiles.append(Tile(3, 0, "D8", Piece("Queen", "♛", 'B')))
-    tiles.append(Tile(4, 0, "A6", Piece("King", "♚", 'B')))
+    tiles.append(Tile(4, 0, "E8", Piece("King", "♚", 'B')))
     tiles.append(Tile(5, 0, "F8", Piece("Bishop", "♝", 'B')))
     tiles.append(Tile(6, 0, "G8", Piece("Knight", "♞", 'B')))
     tiles.append(Tile(7, 0, "H8", Piece("Rook", "♜", 'B')))
@@ -94,12 +94,6 @@ def tile_set_up():
     for i in range(8, 16):
         tiles.append(Tile(i - 8, 1, convert_to_location(i - 8, 1), Piece("Pawn", "♟", 'B')))
         tiles.append(Tile(i - 8, 6, convert_to_location(i - 8, 6), Piece("Pawn", "♙", 'W')))
-    
-    # tiles.append(Tile(3, 6, "D2", Piece("Pawn", "♟", 'B')))
-    # tiles.append(Tile(4, 6, "E2", Piece("Pawn", "♟", 'B')))
-    # tiles.append(Tile(2, 6, "F2", Piece("Pawn", "♟", 'B')))
-    
-    # tiles.append(Tile(4, 6, "E4", Piece("Rook", "♖", 'B')))
 
     tiles.append(Tile(0, 7, "A1", Piece("Rook", "♖", 'W')))
     tiles.append(Tile(1, 7, "B1", Piece("Knight", "♘", 'W')))
@@ -114,6 +108,17 @@ def get_tile(c, r):
     for tile in tiles:
         if(tile.col == c and tile.row == r):
             return tile
+    return None
+
+def get_tile_location(location):
+    location = location.upper()
+
+    for row in range(len(settings.board)):
+        for col in range(len(settings.board[row])):
+            if(settings.board[row][col].location == location):
+                return settings.board[row][col]
+            
+    print(settings.board[row][col].location)
     return None
 
 def create_board():

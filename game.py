@@ -1,5 +1,17 @@
 import pygame, sys, settings
-from chess import get_col_chess, create_board
+
+import pyttsx3
+from chess import get_col_chess, get_tile_location
+from movement import move_manager
+
+chess_board = []
+
+def initalize_board():
+    for r in range(8):
+        row = []
+        for c in range(8):
+            chess_board
+
 
 def displayBoard(screen, font):
     pygame.draw.rect(screen,LIGHTGREEN,(0,0,1920,1080))
@@ -49,9 +61,11 @@ def get_key_press():
     return False
 
 def start_display():
+    engine = pyttsx3.init()
+
     pygame.init()
 
-    window_size = (100, 1080) 
+    window_size = (1920, 1080) 
     screen = pygame.display.set_mode(window_size, pygame.RESIZABLE)
     font = pygame.font.SysFont(None, 80)
     piece_font = pygame.font.Font("segoe-ui-symbol.ttf",80)
@@ -73,15 +87,19 @@ def start_display():
                     current_tile = chr(key_value)
                 elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
                     current_tile += chr(key_value)
-                else: current_tile = ""
+
+                    if get_tile_location(current_tile) != None:
+                        engine.say("You have selected tile " + current_tile)
+                    current_tile = ""
+                else: 
+                    current_tile = ""
 
         displayBoard(screen, piece_font)
         displayColumns(screen, font)
         displayRows(screen, font)
         #Display.flip() updates the display to actually show what we've "drawn" onto the screen. Time delay is so that the loop doesn't grow too large too fast, perhaps not necessary.
         pygame.display.flip()
-        
-        if len(current_tile) == 2:
-            print(current_tile)
-            current_tile = ""
-        else: pygame.time.delay(1000)
+
+        engine.runAndWait()
+
+    engine.stop()
