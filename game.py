@@ -1,16 +1,13 @@
 import pygame, sys, settings
-
 import pyttsx3
 from chess import get_col_chess, get_tile_location, convert_to_location
 from movement import move_manager
 
-chess_board = []
-
-def initalize_board():
-    for r in range(8):
-        row = []
-        for c in range(8):
-            chess_board
+WHITE = (255,255,255)
+BROWN = (180,135,100)
+TAN = (240,216,181)
+LIGHTGREEN = (67,93,73)
+BLACK = (0,0,0)
 
 def displayBoard(screen, font):
     pygame.draw.rect(screen,LIGHTGREEN,(0,0,1920,1080))
@@ -44,25 +41,23 @@ def displayRows(screen, font):
         screen.blit(row,(325-w,height-(h/2)))
         height += 100
 
-WHITE = (255,255,255)
-BROWN = (180,135,100)
-TAN = (240,216,181)
-LIGHTGREEN = (67,93,73)
-BLACK = (0,0,0)
+def read(text):
+    engine = pyttsx3.init()
+    engine.say(text)
+    engine.runAndWait()
+    engine.stop()
 
 def get_information(viewing_row, viewing_col):
+    location = f'{chr(viewing_col + 65)}{viewing_row + 1}'
     type = settings.board[viewing_row][viewing_col].piece.type
     side = "Black" if settings.board[viewing_row][viewing_col].piece.side == "B" else "White"
-
     side_type = "nothing" if type == None else f'a {side} {type}'
 
-    print(f'Row {viewing_row + 1} Col {viewing_col + 1} ({convert_to_location(viewing_col, viewing_row)}) contains {side_type}')
-
+    read(f'{location} contains {side_type}')
 
 def handle_arrow_view(type, viewing_row, viewing_col):
     if viewing_row == -1 or viewing_col == -1:
-        viewing_row = 0
-        viewing_col = 0
+        viewing_row = 0; viewing_col = 0
     elif (type == "U"):
         viewing_row = viewing_row - 1 if viewing_row != 0 else viewing_row
     elif (type == "R"):
@@ -87,8 +82,7 @@ def start_display():
     
     current_tile = ""
 
-    viewing_row = -1
-    viewing_col = -1
+    viewing_row = -1; viewing_col = -1
 
     while True:
         #A necessary line to prevent the whole thing from freezing lol.
@@ -122,5 +116,3 @@ def start_display():
         pygame.display.flip()
 
         engine.runAndWait()
-
-    engine.stop()

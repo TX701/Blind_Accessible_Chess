@@ -1,4 +1,4 @@
-from game import start_display
+from game import start_display, read
 import settings
 from chess import create_board
 
