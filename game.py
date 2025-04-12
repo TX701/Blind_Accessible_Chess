@@ -1,7 +1,7 @@
 import pygame, sys, settings
 
 import pyttsx3
-from chess import get_col_chess, get_tile_location
+from chess import get_col_chess, get_tile_location, convert_to_location
 from movement import move_manager
 
 chess_board = []
@@ -11,7 +11,6 @@ def initalize_board():
         row = []
         for c in range(8):
             chess_board
-
 
 def displayBoard(screen, font):
     pygame.draw.rect(screen,LIGHTGREEN,(0,0,1920,1080))
@@ -51,26 +50,45 @@ TAN = (240,216,181)
 LIGHTGREEN = (67,93,73)
 BLACK = (0,0,0)
 
-def get_key_press():
-    keys = pygame.key.get_pressed()
+def get_information(viewing_row, viewing_col):
+    type = settings.board[viewing_row][viewing_col].piece.type
+    side = "Black" if settings.board[viewing_row][viewing_col].piece.side == "B" else "White"
 
-    for i in keys:
-        if i != False:
-            return i
+    side_type = "nothing" if type == None else f'a {side} {type}'
+
+    print(f'Row {viewing_row + 1} Col {viewing_col + 1} ({convert_to_location(viewing_col, viewing_row)}) contains {side_type}')
+
+
+def handle_arrow_view(type, viewing_row, viewing_col):
+    if viewing_row == -1 or viewing_col == -1:
+        viewing_row = 0
+        viewing_col = 0
+    elif (type == "U"):
+        viewing_row = viewing_row - 1 if viewing_row != 0 else viewing_row
+    elif (type == "R"):
+        viewing_col = viewing_col + 1 if viewing_col != 7 else viewing_col
+    elif (type == "D"):
+        viewing_row = viewing_row + 1 if viewing_row != 7 else viewing_row
+    elif (type == "L"):
+        viewing_col = viewing_col - 1 if viewing_col != 0 else viewing_col
         
-    return False
+    get_information(viewing_row, viewing_col)
+    return viewing_row, viewing_col
 
 def start_display():
     engine = pyttsx3.init()
 
     pygame.init()
 
-    window_size = (1920, 1080) 
+    window_size = (1920, 1000) 
     screen = pygame.display.set_mode(window_size, pygame.RESIZABLE)
     font = pygame.font.SysFont(None, 80)
     piece_font = pygame.font.Font("segoe-ui-symbol.ttf",80)
     
     current_tile = ""
+
+    viewing_row = -1
+    viewing_col = -1
 
     while True:
         #A necessary line to prevent the whole thing from freezing lol.
@@ -81,16 +99,19 @@ def start_display():
 
             if event.type == pygame.KEYDOWN:
                 key_value = event.key
-                
                 # if the pressed key is between a - h and the current_tile is 0
                 if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
                     current_tile = chr(key_value)
                 elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
                     current_tile += chr(key_value)
-
-                    if get_tile_location(current_tile) != None:
-                        engine.say("You have selected tile " + current_tile)
-                    current_tile = ""
+                elif event.key == pygame.K_UP:
+                    viewing_row, viewing_col = handle_arrow_view("U", viewing_row, viewing_col)
+                elif event.key == pygame.K_RIGHT:
+                    viewing_row, viewing_col =  handle_arrow_view("R", viewing_row, viewing_col)
+                elif event.key == pygame.K_DOWN:
+                    viewing_row, viewing_col =  handle_arrow_view("D", viewing_row, viewing_col)
+                elif event.key == pygame.K_LEFT:
+                    viewing_row, viewing_col =  handle_arrow_view("L", viewing_row, viewing_col)
                 else: 
                     current_tile = ""
 
