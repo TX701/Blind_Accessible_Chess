@@ -70,7 +70,7 @@ def handle_arrow_view(type, viewing_row, viewing_col):
     get_information(viewing_row, viewing_col)
     return viewing_row, viewing_col
 
-def handle_moving(current_tile):
+def handle_moving_start(current_tile):
     tile = get_tile_location(current_tile)
     read(f'Selected {current_tile} {tile.piece.type}')
     possible_moves = move_manager(tile)
@@ -80,12 +80,30 @@ def handle_moving(current_tile):
     elif len(possible_moves) > 0:
         read("The piece on this tile can move to")
         for i in possible_moves:
-            read(i.location)
+            print(i.location)
+            handle_moving_end(possible_moves)
     else:
         read("There are no possible places for this tile to move to")
-
     
     current_tile = ""
+
+def handle_moving_end(possible_moves):
+    waiting = True
+
+    # current_tile = ""
+    # while(waiting):
+    #     for event in pygame.event.get():
+    #         if 97 <= int(event.key) <= 104 and len(current_tile) == 0:
+    #             current_tile = chr(event.key)
+    #         elif 49 <= int(event.key) <= 56 and len(current_tile) == 1:
+    #             current_tile += chr(event.key)
+
+    #             if current_tile not in possible_moves:
+    #                 read(f'{current_tile} is an invalid move')
+    #             else: read(current_tile)
+
+    #             # handle_moving_start(current_tile)
+    #             current_tile = ""
 
 def start_display():
     engine = pyttsx3.init()
@@ -115,7 +133,7 @@ def start_display():
                     current_tile = chr(key_value)
                 elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
                     current_tile += chr(key_value)
-                    handle_moving(current_tile)
+                    handle_moving_start(current_tile)
                     current_tile = ""
                 elif event.key == pygame.K_UP:
                     viewing_row, viewing_col = handle_arrow_view("U", viewing_row, viewing_col)

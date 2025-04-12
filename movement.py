@@ -47,12 +47,16 @@ def get_line(start, col_inc, row_inc):
 
     new_tile = tile_math(start, col_inc, row_inc)
     while new_tile is not None:
-        if get_type(new_tile) is None or knight:
+        if get_type(new_tile) is None:
             line.append(new_tile)
             new_tile = tile_math(new_tile, col_inc, row_inc)
         elif not same_side(new_tile, start):
             line.append(new_tile)
-            return line
+
+            if (knight):
+                new_tile = tile_math(new_tile, col_inc, row_inc)
+            else:
+                return line
         else:
             return line
 
