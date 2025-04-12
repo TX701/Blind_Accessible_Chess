@@ -131,10 +131,3 @@ def create_board():
         board.append(row)
 
     return board
-
-def print_board():
-    for r in range(len(settings.board)):
-        print("\n")
-        for c in range(len(settings.board[r])):
-            print(settings.board[r][c].piece.name, end="")
-    print("\n")
