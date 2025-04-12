@@ -39,24 +39,49 @@ TAN = (240,216,181)
 LIGHTGREEN = (67,93,73)
 BLACK = (0,0,0)
 
+def get_key_press():
+    keys = pygame.key.get_pressed()
+
+    for i in keys:
+        if i != False:
+            return i
+        
+    return False
+
 def start_display():
     pygame.init()
 
-    window_size = (1920, 1080) 
+    window_size = (100, 1080) 
     screen = pygame.display.set_mode(window_size, pygame.RESIZABLE)
     font = pygame.font.SysFont(None, 80)
     piece_font = pygame.font.Font("segoe-ui-symbol.ttf",80)
     
+    current_tile = ""
+
     while True:
         #A necessary line to prevent the whole thing from freezing lol.
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                key_value = event.key
                 
+                # if the pressed key is between a - h and the current_tile is 0
+                if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
+                    current_tile = chr(key_value)
+                elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
+                    current_tile += chr(key_value)
+                else: current_tile = ""
+
         displayBoard(screen, piece_font)
         displayColumns(screen, font)
         displayRows(screen, font)
         #Display.flip() updates the display to actually show what we've "drawn" onto the screen. Time delay is so that the loop doesn't grow too large too fast, perhaps not necessary.
         pygame.display.flip()
-        pygame.time.delay(1000)
+        
+        if len(current_tile) == 2:
+            print(current_tile)
+            current_tile = ""
+        else: pygame.time.delay(1000)
