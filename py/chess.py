@@ -4,21 +4,21 @@ from py.movement import move_manager
 class Piece:
     def __init__(self, type, name, side):
         self.type = type
-        self.name = name 
-        self.side = side # remember colors look reversed in the terminal so black will look white. white is the one thats just outlines
+        self.name = name # will be a symbol that represents the piece
+        self.side = side # 'B' or 'W'
 
 class Tile:
     def __init__(self, col, row, location, piece):
         self.col = col
         self.row = row 
-        self.location = location
+        self.location = location # A6 B8 etc
         self.piece = piece
 
 def get_col_chess(col):
-    return chr(col + 65)
+    return chr(col + 65) # converts 0 to A- 1 to B- 2 to C- etc
 
 def convert_to_location(col, row):
-    return get_col_chess(col) + str((8 - int(row)))
+    return get_col_chess(col) + str((8 - int(row))) # converts 0, 0 to A8
 
 # gets all pieces from one side
 def get_pieces(side):
@@ -36,7 +36,7 @@ def move(tile, end_tile):
         end_tile.piece = tile.piece # for the tile youre moving to, change its piece to the given tiles piece
         tile.piece = Piece(None, " ", 'N') # for the given tile set its piece to an empty Piece
                 
-#checks if given side is in check (tested and should work)
+#checks if given side is in check
 def is_in_check(side):
     opposing_side = 'W' if (side == 'B') else 'B'
     tiles_with_pieces = get_pieces(opposing_side) # get all pieces from opposing side
@@ -80,6 +80,7 @@ def check_mate(side):
 
 tiles = []
 
+# initalizing our tiles and pieces
 def tile_set_up():
     tiles.append(Tile(0, 0, "A8", Piece("Rook", "♜", 'B')))
     tiles.append(Tile(1, 0, "B8", Piece("Knight", "♞", 'B')))
@@ -103,14 +104,16 @@ def tile_set_up():
     tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
     tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
     
-def get_tile(c, r):
+# given a row and col returns what piece should be there (used when building the board)
+def get_tile(r, c):
     for tile in tiles:
         if(tile.col == c and tile.row == r):
             return tile
     return None
 
-def get_tile_location(location):
-    location = location.upper()
+# gets the tile that is at a given location 
+def get_tile_from_location(location):
+    location = location.upper() # convert to upper case to accept a6 and A6
 
     for row in range(len(settings.board)):
         for col in range(len(settings.board[row])):
@@ -119,17 +122,20 @@ def get_tile_location(location):
     return None
 
 def create_board():
-    tile_set_up()
+    tile_set_up() # initalizing tiles
 
     board = []
     for r in range(8):
         row = []
         for c in range(8):
-            tile = get_tile(c, r)
+            tile = get_tile(r, c)
+
             if tile is not None:
-                row.append(tile)
+                row.append(tile) # if there is supposed to be a tile at this given row col- add it
             else:
+                # if there is not tile here create a 'None' one
                 row.append(Tile(c, r, convert_to_location(c, r), Piece(None, " ", 'N')))
+                # our 'None' tile still has some attributes to avoid Noneobject errors
         board.append(row)
 
     return board
