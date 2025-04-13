@@ -79,6 +79,8 @@ def handle_moving_start(current_tile):
 
     if tile.piece.type == None:
         read("There are no pieces on this tile")
+    elif tile.piece.side != settings.turn:
+        read("this piece cannot be moved this turn")
     elif len(possible_moves) > 0:
         read("The piece on this tile can move to")
 
@@ -111,6 +113,13 @@ def handle_moving_end(tile_to_move, possible_moves):
 
                     if get_tile_location(current_tile) in possible_moves:
                         move(tile_to_move, get_tile_location(current_tile))
+
+                        #changes the turn
+                        if settings.turn == 'W':
+                            settings.turn = 'B'
+                        else:
+                            settings.turn = 'W'
+
                         read(f'{tile_to_move.location} {get_tile_location(current_tile).piece.type} moving to {current_tile}')
                     else:
                         read(f'{current_tile} is an illegal move')
@@ -138,6 +147,8 @@ def start_display():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+
 
             if event.type == pygame.KEYDOWN:
                 key_value = event.key
