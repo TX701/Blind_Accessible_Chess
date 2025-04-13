@@ -16,9 +16,9 @@ def displayBoard(screen, font):
     for r in range(8):
         for c in range(8):
             if ((r % 2 == 0) and (c % 2 == 0)) or ((r %2 == 1) and (c%2 == 1)):
-                square = pygame.draw.rect(screen,TAN,(360+(r*100),140+(c*100),100,100))
+                square = pygame.draw.rect(screen, TAN, (360 + (r * 100), 140 + (c * 100), 100, 100))
             else:
-                square = pygame.draw.rect(screen,BROWN,(360+(r*100),140+(c*100),100,100))
+                square = pygame.draw.rect(screen, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100))
 
             text = font.render(settings.board[c][r].piece.name, True, (0, 0, 0)) 
             rect = text.get_rect(center = (square.centerx, square.centery))
@@ -36,8 +36,8 @@ def displayColumns(screen, font):
 def displayRows(screen, font):
     height = 190
     for i in range(1, 9):
-        row = font.render(str(i), True, BLACK)
-        w,h = font.size(str(i))
+        row = font.render(str(9-i), True, BLACK)
+        w,h = font.size(str(9-i))
         screen.blit(row,(325-w,height-(h/2)))
         height += 100
 
@@ -80,8 +80,9 @@ def handle_moving_start(current_tile):
     elif len(possible_moves) > 0:
         read("The piece on this tile can move to")
         for i in possible_moves:
-            print(i.location)
-            handle_moving_end(possible_moves)
+            print(i.location, end=" ")
+            read(i.location)
+            # handle_moving_end(possible_moves)
     else:
         read("There are no possible places for this tile to move to")
     
@@ -89,21 +90,6 @@ def handle_moving_start(current_tile):
 
 def handle_moving_end(possible_moves):
     waiting = True
-
-    # current_tile = ""
-    # while(waiting):
-    #     for event in pygame.event.get():
-    #         if 97 <= int(event.key) <= 104 and len(current_tile) == 0:
-    #             current_tile = chr(event.key)
-    #         elif 49 <= int(event.key) <= 56 and len(current_tile) == 1:
-    #             current_tile += chr(event.key)
-
-    #             if current_tile not in possible_moves:
-    #                 read(f'{current_tile} is an invalid move')
-    #             else: read(current_tile)
-
-    #             # handle_moving_start(current_tile)
-    #             current_tile = ""
 
 def start_display():
     engine = pyttsx3.init()

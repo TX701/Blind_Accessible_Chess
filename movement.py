@@ -47,16 +47,12 @@ def get_line(start, col_inc, row_inc):
 
     new_tile = tile_math(start, col_inc, row_inc)
     while new_tile is not None:
-        if get_type(new_tile) is None:
+        if get_type(new_tile) is None or knight:
             line.append(new_tile)
             new_tile = tile_math(new_tile, col_inc, row_inc)
         elif not same_side(new_tile, start):
             line.append(new_tile)
-
-            if (knight):
-                new_tile = tile_math(new_tile, col_inc, row_inc)
-            else:
-                return line
+            return line
         else:
             return line
 
@@ -128,12 +124,31 @@ def knightMovement(tile_with_knight):
 
     possible_moves.extend(get_square(tile_with_knight, 5))
 
-    # unwanted.extend(get_square(tile_with_knight, 3))
+    unwanted.extend(get_square(tile_with_knight, 3))
     unwanted.extend(get_plus(tile_with_knight))
     unwanted.extend(get_cross(tile_with_knight))
+
+    print(tile_with_knight.piece.side)
+    for i in possible_moves:
+        if i.piece != None:
+            print(str(i.location) + str(i.piece.side) + str(i.piece.type))
+
+
+        if i in unwanted:
+            possible_moves.remove(i)
+        elif i.piece.side == tile_with_knight.piece.side:
+            possible_moves.remove(i)
+        else:
+            print(i.piece.side)
+            print(tile_with_knight.piece.side)
     
+    strm = ""
+    for i in possible_moves:
+        strm += i.location + " "
+
+    print(strm)
     # return None
-    return [x for x in possible_moves if x not in unwanted]
+    return possible_moves
 
 def bishopMovement(tile_with_bishop):
     return get_cross(tile_with_bishop)
