@@ -54,6 +54,11 @@ def read(text):
     engine.runAndWait()
     engine.stop()
 
+# reads off whos turn its is currently
+def turn_update():
+    current_turn = "White" if settings.turn == "W" else "Black"
+    read(f'{current_turn}\'s turn')
+
 # for given a row and col return whats on the board in that location
 # used for the player to visualize whats on the board
 def get_information(viewing_row, viewing_col):
@@ -137,6 +142,7 @@ def handle_moving_end(tile_to_move, possible_moves):
                     # if the new tile is one of the possible moves
                     if get_tile_from_location(current_tile) in possible_moves:
                         move(tile_to_move, get_tile_from_location(current_tile))  # move the piece on the tile to the new tile
+                        pygame.display.flip() #update the board
 
                         #changes the turn
                         if settings.turn == 'W':
@@ -146,6 +152,7 @@ def handle_moving_end(tile_to_move, possible_moves):
 
                         # confirm movement to player
                         read(f'{tile_to_move.location} {get_tile_from_location(current_tile).piece.type} moving to {current_tile}')
+                        read("It is now the other player's turn")
                     else:
                         read(f'{current_tile} is an illegal move')
 
@@ -208,4 +215,4 @@ def start_display():
         displayBoard(screen, piece_font) # display whats on the board
         displayColumns(screen, font) # show column letters
         displayRows(screen, font) # show row numbers
-        pygame.display.flip() #update the board (this is used to reflect any changes made to the 2D array)
+        pygame.display.flip() #update the board
