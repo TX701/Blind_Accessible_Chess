@@ -115,7 +115,7 @@ def get_square(tile_with_piece, length):
 def check_diagonal(tile, direction, row_movement, possible_moves):
     diagonal = tile_math(tile, direction, row_movement)
     # if the diagonal is a real piece and if the tile has something on it
-    if diagonal != None and get_type(diagonal) != None:
+    if diagonal != None and get_type(diagonal) != None and not same_side(diagonal, tile):
         possible_moves.append(diagonal) # append to the given array
         # we append rather than return since we need to make sure we dont append something that is null
 
@@ -123,6 +123,7 @@ def pawnMovement(tile_with_pawn):
     possible_moves = []
     row_movement = -1 if get_side(tile_with_pawn) == 'W' else 1 # determining if we are moving up or down the board
 
+    # check sides
     check_diagonal(tile_with_pawn, -1, row_movement, possible_moves) # adds left diagonal to the array if its meets criteria 
     check_diagonal(tile_with_pawn, 1, row_movement, possible_moves) # adds right diagonal to the array if its meets criteria 
 

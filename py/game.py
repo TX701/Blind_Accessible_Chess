@@ -107,6 +107,8 @@ def handle_moving_start(current_tile):
     # if there are no pieces on the given tile, the player cannot move
     if tile.piece.type == None:
         read("There are no pieces on this tile")
+    elif tile.piece.side != settings.turn:
+        read("This is the opponent's piece, you are not allowed to move it") 
     else:
         side = "Black" if tile.piece.side == "B" else "White" if tile.piece.side == "W" else ""
         read(f'Selected {current_tile} {side} {tile.piece.type}') # reads off the location color and piece
@@ -124,7 +126,6 @@ def handle_moving_start(current_tile):
 # handles selecting where a piece can move to
 def handle_moving_end(tile_to_move, possible_moves):
     waiting = True # waiting for the users input
-
     current_tile = "" # a chess location A8 C4 etc
 
     while(waiting):
