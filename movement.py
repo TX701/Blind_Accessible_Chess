@@ -109,7 +109,7 @@ def pawnMovement(tile_with_pawn):
         possible_moves.append(forward)
 
         forward_forward = tile_math(tile_with_pawn, 0, row_movement * 2)
-        if forward_forward != None and get_type(forward_forward) == None:
+        if get_type(forward_forward) == None:
             if ((get_side(tile_with_pawn) == 'W' and tile_with_pawn.row == 6) or (get_side(tile_with_pawn) == 'B' and tile_with_pawn.row == 1)):
                 possible_moves.append(forward_forward)
 
@@ -123,32 +123,17 @@ def knightMovement(tile_with_knight):
     unwanted = []
 
     possible_moves.extend(get_square(tile_with_knight, 5))
-
-    unwanted.extend(get_square(tile_with_knight, 3))
-    unwanted.extend(get_plus(tile_with_knight))
-    unwanted.extend(get_cross(tile_with_knight))
-
-    print(tile_with_knight.piece.side)
-    for i in possible_moves:
-        if i.piece != None:
-            print(str(i.location) + str(i.piece.side) + str(i.piece.type))
-
-
-        if i in unwanted:
-            possible_moves.remove(i)
-        elif i.piece.side == tile_with_knight.piece.side:
-            possible_moves.remove(i)
-        else:
-            print(i.piece.side)
-            print(tile_with_knight.piece.side)
+ 
+    unwanted = unwanted + get_square(tile_with_knight, 3)
+    unwanted = unwanted + get_plus(tile_with_knight)
+    unwanted = unwanted + get_cross(tile_with_knight)
     
-    strm = ""
-    for i in possible_moves:
-        strm += i.location + " "
+    arr = [x for x in possible_moves if x not in unwanted]
+    for i in arr:
+        if i.piece.side == tile_with_knight.piece.side:
+            arr.remove(i)
 
-    print(strm)
-    # return None
-    return possible_moves
+    return arr
 
 def bishopMovement(tile_with_bishop):
     return get_cross(tile_with_bishop)
@@ -156,7 +141,7 @@ def bishopMovement(tile_with_bishop):
 def queenMovement(tile_with_queen):
     possible_moves = []
 
-    possible_moves.extend(get_plus(tile_with_queen))
+    possible_moves = possible_moves + get_plus(tile_with_queen)
     possible_moves.extend(get_cross(tile_with_queen))
 
     return possible_moves

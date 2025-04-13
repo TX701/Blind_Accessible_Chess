@@ -1,6 +1,6 @@
 import pygame, sys, settings
 import pyttsx3
-from chess import get_col_chess, get_tile_location, convert_to_location
+from chess import get_col_chess, get_tile_location, convert_to_location, move
 from movement import move_manager
 
 WHITE = (255,255,255)
@@ -72,24 +72,50 @@ def handle_arrow_view(type, viewing_row, viewing_col):
 
 def handle_moving_start(current_tile):
     tile = get_tile_location(current_tile)
-    read(f'Selected {current_tile} {tile.piece.type}')
+    side = "Black" if tile.piece.side == "B" else "White" if tile.piece.side == "W" else ""
+    read(f'Selected {current_tile} {side} {tile.piece.type}')
     possible_moves = move_manager(tile)
 
     if tile.piece.type == None:
         read("There are no pieces on this tile")
     elif len(possible_moves) > 0:
         read("The piece on this tile can move to")
+
         for i in possible_moves:
-            print(i.location, end=" ")
-            read(i.location)
-            # handle_moving_end(possible_moves)
+            if (i.piece.side != 'N'):
+                side = "Black" if i.piece.side == "B" else "White"
+                read(f'{i.location} {side} {i.piece.type}')
+            else: read(i.location)
+
+        handle_moving_end(tile, possible_moves)
     else:
         read("There are no possible places for this tile to move to")
     
     current_tile = ""
 
-def handle_moving_end(possible_moves):
+def handle_moving_end(tile_to_move, possible_moves):
     waiting = True
+
+    current_tile = ""
+
+    while(waiting):
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                key_value = event.key
+                # if the pressed key is between a - h and the current_tile is 0
+                if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
+                    current_tile = chr(key_value)
+                elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
+                    current_tile += chr(key_value)
+
+                    if get_tile_location(current_tile) in possible_moves:
+                        move(tile_to_move, get_tile_location(current_tile))
+                        read(f'{tile_to_move.location} {get_tile_location(current_tile).piece.type} moving to {current_tile}')
+                    else:
+                        read(f'{current_tile} is an illegal move')
+
+                    current_tile = ""
+                    waiting = False
 
 def start_display():
     engine = pyttsx3.init()
@@ -135,7 +161,6 @@ def start_display():
         displayBoard(screen, piece_font)
         displayColumns(screen, font)
         displayRows(screen, font)
-        #Display.flip() updates the display to actually show what we've "drawn" onto the screen. Time delay is so that the loop doesn't grow too large too fast, perhaps not necessary.
-        pygame.display.flip()
+        pygame.display.flip() #update the board (this is used to reflect any changes made to the 2D array)
 
         engine.runAndWait()
