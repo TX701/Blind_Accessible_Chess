@@ -1,6 +1,6 @@
-from game import start_display, read
-import settings
-from chess import create_board
+from py.game import start_display, read
+import py.settings as settings
+from py.chess import create_board
 
 def main():
     settings.init()
