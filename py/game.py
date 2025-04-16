@@ -11,6 +11,8 @@ TAN = (240,216,181)
 LIGHTGREEN = (67,93,73)
 BLACK = (0,0,0)
 
+engine = pyttsx3.init()
+
 def displayBoard(screen, font):
     pygame.draw.rect(screen,LIGHTGREEN,(0,0,1920,1080)) # set background color
     pygame.draw.rect(screen,BLACK,(350,130,820,820), width = 10) # set chessboard color
@@ -49,7 +51,6 @@ def displayRows(screen, font):
 
 # reads out given text with the text to speech
 def read(text):
-    engine = pyttsx3.init()
     engine.say(text)
     engine.runAndWait()
     engine.stop()
