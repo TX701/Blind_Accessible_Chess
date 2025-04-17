@@ -6,6 +6,7 @@ from py.movement import move_manager
 
 # constant color values
 WHITE = (255,255,255)
+YELLOW = (255,255,143)
 BROWN = (180,135,100)
 TAN = (240,216,181)
 LIGHTGREEN = (67,93,73)
@@ -13,17 +14,23 @@ BLACK = (0,0,0)
 
 engine = pyttsx3.init()
 
+viewing_row = -1; viewing_col = -1 # for if the user is viewing the board
+
 def displayBoard(screen, font):
     pygame.draw.rect(screen,LIGHTGREEN,(0,0,1920,1080)) # set background color
     pygame.draw.rect(screen,BLACK,(350,130,820,820), width = 10) # set chessboard color
-    
+    global viewing_row; global viewing_col
+
     for r in range(8):
         for c in range(8):
-            # to create the checkerboard pattern if r and c are both odd or both even color the tile tan
+            # to create the checkerboard pattern if r and c are both odd or both even color the tile tan         
             if ((r % 2 == 0) and (c % 2 == 0)) or ((r %2 == 1) and (c%2 == 1)):
-                square = pygame.draw.rect(screen, TAN, (360 + (r * 100), 140 + (c * 100), 100, 100))
+                square = pygame.draw.rect(screen, TAN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
             else:
-                square = pygame.draw.rect(screen, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100))
+                square = pygame.draw.rect(screen, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
+
+            if (viewing_row != -1 and viewing_col != -1) and r == viewing_row and c == viewing_col:
+                pygame.draw.rect(screen, YELLOW, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
 
             # set the text on the tile to be the current piece that is in that spot on the board
             text = font.render(settings.board[c][r].piece.name, True, (0, 0, 0)) 
@@ -52,7 +59,7 @@ def displayRows(screen, font):
 # reads out given text with the text to speech
 def read(text):
     engine.say(text)
-    engine.runAndWait()
+    engine.runAndWait() 
     engine.stop()
 
 # reads off whos turn its is currently
@@ -62,7 +69,9 @@ def turn_update():
 
 # for given a row and col return whats on the board in that location
 # used for the player to visualize whats on the board
-def get_information(viewing_row, viewing_col):
+def get_information():
+    global viewing_row; global viewing_col
+
     location = f'{chr(viewing_col + 65)}{8 - viewing_row }'
     type = settings.board[viewing_row][viewing_col].piece.type
     side = "Black" if settings.board[viewing_row][viewing_col].piece.side == "B" else "White"
@@ -71,7 +80,9 @@ def get_information(viewing_row, viewing_col):
     read(f'{location} contains {side_type}')
 
 # so the arrow keys can be used to move around the board and read off whats on each tile
-def handle_arrow_view(type, viewing_row, viewing_col):
+def handle_arrow_view(type):
+    global viewing_row; global viewing_col
+
     if viewing_row == -1 or viewing_col == -1:
         # if the player has not used the arrow keys yet start them in the top left corner
         viewing_row = 0; viewing_col = 0 
@@ -88,10 +99,8 @@ def handle_arrow_view(type, viewing_row, viewing_col):
         # if the player is not going to go off the board move them one to the left
         viewing_col = viewing_col - 1 if viewing_col != 0 else viewing_col
         
-    get_information(viewing_row, viewing_col) # return what the given row col contains
+    get_information() # return what the given row col contains
     # if the user was going to go off the board the previous value will be read (since the users movement was prevented)
-
-    return viewing_row, viewing_col
 
 def read_off_list(possible_moves):
     for i in possible_moves:
@@ -160,14 +169,13 @@ def handle_moving_end(tile_to_move, possible_moves):
 
                     current_tile = ""
                     waiting = False
-
                 # pressed 'r'
                 elif int(key_value) == 114:
                     read_off_list(possible_moves)
                 # pressed 'q
-                elif int(key_value) == 113:
-                    read("Canceling movement")
-                    waiting = False # stop the loop
+                # elif int(key_value) == 113:
+                #     read("Canceling movement")
+                #     waiting = False # stop the loop
 
 def start_display():
     pygame.init() # initalizing pygame
@@ -179,7 +187,6 @@ def start_display():
     piece_font = pygame.font.Font("./assets/segoe-ui-symbol.ttf",80)
     
     current_tile = "" # for if the user is trying to select a tile
-    viewing_row = -1; viewing_col = -1 # for if the user is viewing the board
 
     # a pygame loop that runs while the user is playing
     while True:
@@ -201,16 +208,16 @@ def start_display():
                     current_tile = "" # reset current tile
                 elif event.key == pygame.K_UP:
                     # the player has moved their 'visual' adjust row col
-                    viewing_row, viewing_col = handle_arrow_view("U", viewing_row, viewing_col)
+                    handle_arrow_view("U")
                 elif event.key == pygame.K_RIGHT:
                     # the player has moved their 'visual' adjust row col
-                    viewing_row, viewing_col =  handle_arrow_view("R", viewing_row, viewing_col)
+                    handle_arrow_view("R")
                 elif event.key == pygame.K_DOWN:
                     # the player has moved their 'visual' adjust row col
-                    viewing_row, viewing_col =  handle_arrow_view("D", viewing_row, viewing_col)
+                    handle_arrow_view("D")
                 elif event.key == pygame.K_LEFT:
                     # the player has moved their 'visual' adjust row col
-                    viewing_row, viewing_col =  handle_arrow_view("L", viewing_row, viewing_col)
+                    handle_arrow_view("L")
                 else: 
                     current_tile = ""
 

@@ -1,5 +1,8 @@
 import py.chess as ch
-
+import random as rand
+import py.movement as movement
+import py.settings as settings
+import py.game as game
 class engine:
     def __init__(self, side):
         self.side = side
@@ -14,13 +17,20 @@ class engine:
 #     #does any random move
 
 
+def rand_move(e):
+    #pick random tiles until it contains a piece with the correct color
 
-def all_possible_moves(e):
-    all_pieces = ch.get_pieces(e.side)
-    return all_pieces
-    # all_moves = []
-    # print(all_pieces)
+    while(True):
+        row = chr(rand.randint(97, 104))
+        col = chr(rand.randint(49, 56))
+        rand_tile = ch.get_tile_from_location(row + col)
 
-    # for piece in all_pieces:
-    #     all_moves +=
-
+        if rand_tile.piece != None:
+            if rand_tile.piece.side == settings.eng.side:
+                all_moves = movement.move_manager(rand_tile)
+                if len(all_moves) > 0:
+                    target_tile = rand.choice(all_moves)
+                    text = "opponent is moving the "+ rand_tile.piece.type + " on "+ rand_tile.location+ "to "+ target_tile.location
+                    game.read(text)
+                    ch.move(rand_tile, target_tile)
+                    break

@@ -32,10 +32,17 @@ def get_pieces(side):
 
 # simple move function
 def move(tile, end_tile):
-    if tile.piece.type != None: #if the tile (with the piece you want to move) has a piece
-        end_tile.piece = tile.piece # for the tile youre moving to, change its piece to the given tiles piece
-        tile.piece = Piece(None, " ", 'N') # for the given tile set its piece to an empty Piece
-                
+    if tile.piece.type != None:  # if the tile (with the piece you want to move) has a piece
+        end_tile.piece = tile.piece  # for the tile youre moving to, change its piece to the given tiles piece
+        tile.piece = Piece(None, " ", 'N')  # for the given tile set its piece to an empty Piece
+
+    # changes the turn
+    if settings.turn == 'W':
+        settings.turn = 'B'
+    else:
+        settings.turn = 'W'
+
+
 #checks if given side is in check
 def is_in_check(side):
     opposing_side = 'W' if (side == 'B') else 'B'
