@@ -29,7 +29,7 @@ def displayBoard(screen, font):
             else:
                 square = pygame.draw.rect(screen, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
 
-            if (viewing_row != -1 and viewing_col != -1) and r == viewing_row and c == viewing_col:
+            if (viewing_row != -1 and viewing_col != -1) and c == viewing_row and r == viewing_col:
                 pygame.draw.rect(screen, YELLOW, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
 
             # set the text on the tile to be the current piece that is in that spot on the board
