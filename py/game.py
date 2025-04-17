@@ -210,8 +210,6 @@ def start_display():
 
     # a pygame loop that runs while the user is playing
     while True:
-        print("White" + str(check_mate('W')))
-        print("Black" + str(check_mate('B')))
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

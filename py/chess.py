@@ -100,27 +100,17 @@ def tile_set_up():
 
     for i in range(8, 16):
         tiles.append(Tile(i - 8, 1, convert_to_location(i - 8, 1), Piece("Pawn", "♟", 'B')))
-        # tiles.append(Tile(i - 8, 6, convert_to_location(i - 8, 6), Piece("Pawn", "♙", 'W')))
-        tiles.append(Tile(i - 8, 6, convert_to_location(i - 8, 6), Piece("Pawn", "♟", 'B')))
+        tiles.append(Tile(i - 8, 6, convert_to_location(i - 8, 6), Piece("Pawn", "♙", 'W')))
 
-    # tiles.append(Tile(0, 7, "A1", Piece("Rook", "♖", 'W')))
-    # tiles.append(Tile(1, 7, "B1", Piece("Knight", "♘", 'W')))
-    # tiles.append(Tile(2, 7, "C1", Piece("Bishop", "♗", 'W')))
-    # tiles.append(Tile(3, 7, "D1", Piece("Queen", "♕", 'W')))
-    # tiles.append(Tile(4, 7, "E1", Piece("King", "♔", 'W')))
-    # tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♗", 'W')))
-    # tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
-    # tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
-    
-    tiles.append(Tile(0, 7, "A1", Piece("Rook", "♜", 'B')))
-    tiles.append(Tile(1, 7, "B1", Piece("Knight", "♞", 'B')))
-    tiles.append(Tile(2, 7, "C1", Piece("Bishop", "♝", 'B')))
-    tiles.append(Tile(3, 7, "D1", Piece("Queen", "♛", 'B')))
+    tiles.append(Tile(0, 7, "A1", Piece("Rook", "♖", 'W')))
+    tiles.append(Tile(1, 7, "B1", Piece("Knight", "♘", 'W')))
+    tiles.append(Tile(2, 7, "C1", Piece("Bishop", "♗", 'W')))
+    tiles.append(Tile(3, 7, "D1", Piece("Queen", "♕", 'W')))
     tiles.append(Tile(4, 7, "E1", Piece("King", "♔", 'W')))
-    tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♝", 'B')))
-    tiles.append(Tile(6, 7, "G1", Piece("Knight", "♞", 'B')))
-    tiles.append(Tile(7, 7, "H1", Piece("Rook", "♜", 'B')))  
-    
+    tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♗", 'W')))
+    tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
+    tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
+
 # given a row and col returns what piece should be there (used when building the board)
 def get_tile(r, c):
     for tile in tiles:
