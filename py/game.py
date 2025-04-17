@@ -1,7 +1,7 @@
 import pygame, sys
 import py.settings as settings
 import pyttsx3
-from py.chess import get_col_chess, get_tile_from_location, move
+from py.chess import get_col_chess, get_tile_from_location, move, check_mate
 from py.movement import move_manager
 
 # constant color values
@@ -13,51 +13,60 @@ BLACK = (0,0,0)
 YELLOW = (255,255,143)
 BLUE = (30,144,255)
 
+# determing size and fonts
+WINDOW_SIZE = (1920, 1000) 
+SCREEN = None
+FONT = None
+PIECE_FONT = None
+
 engine = pyttsx3.init()
+
 viewing_row = -1; viewing_col = -1 # for if the user is viewing the board
 possible_moves = []
 
-def displayBoard(screen, font):
-    pygame.draw.rect(screen,LIGHTGREEN,(0,0,1920,1080)) # set background color
-    pygame.draw.rect(screen,BLACK,(350,130,820,820), width = 10) # set chessboard color
+def displayBoard():
+    pygame.draw.rect(SCREEN,LIGHTGREEN,(0,0,1920,1080)) # set background color
+    pygame.draw.rect(SCREEN,BLACK,(350,130,820,820), width = 10) # set chessboard color
     global viewing_row; global viewing_col
 
     for r in range(8):
+        global possible_moves
+        
         for c in range(8):
             # to create the checkerboard pattern if r and c are both odd or both even color the tile tan         
             if ((r % 2 == 0) and (c % 2 == 0)) or ((r %2 == 1) and (c%2 == 1)):
-                square = pygame.draw.rect(screen, TAN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
+                square = pygame.draw.rect(SCREEN, TAN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
             else:
-                square = pygame.draw.rect(screen, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
+                square = pygame.draw.rect(SCREEN, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
 
             if (viewing_row != -1 and viewing_col != -1) and c == viewing_row and r == viewing_col:
-                pygame.draw.rect(screen, YELLOW, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
+                pygame.draw.rect(SCREEN, YELLOW, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
+                
+            if settings.board[c][r] in possible_moves:
+                pygame.draw.rect(SCREEN, BLUE, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if a piece is able to move to this tile- add a boarder to it
 
-            # if settings.board[c][r] in possible_moves:
-            #     pygame.draw.rect(screen, BLUE, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if a piece is able to move to this tile- add a boarder to it
 
             # set the text on the tile to be the current piece that is in that spot on the board
-            text = font.render(settings.board[c][r].piece.name, True, (0, 0, 0)) 
+            text = PIECE_FONT.render(settings.board[c][r].piece.name, True, (0, 0, 0)) 
             rect = text.get_rect(center = (square.centerx, square.centery)) # places text in the middle of the square
-            screen.blit(text, rect)
+            SCREEN.blit(text, rect)
 
 # A-H display on top
-def displayColumns(screen, font):
+def displayColumns():
     width = 410
     for i in range(1, 9):
-        row = font.render(get_col_chess(i - 1), True, BLACK)
-        w,h = font.size(get_col_chess(i))
-        
-        screen.blit(row,(width-w,110-(h/2)))
+        row = FONT.render(get_col_chess(i - 1), True, BLACK)
+        w,h = FONT.size(get_col_chess(i))
+        SCREEN.blit(row,(width-w,110-(h/2)))
         width += 100
 
 # 1-8 display on left
-def displayRows(screen, font):
+def displayRows():
     height = 190
     for i in range(1, 9):
-        row = font.render(str(9-i), True, BLACK)
-        w,h = font.size(str(9-i))
-        screen.blit(row,(325-w,height-(h/2)))
+        row = FONT.render(str(9-i), True, BLACK)
+        w,h = FONT.size(str(9-i))
+        SCREEN.blit(row,(325-w,height-(h/2)))
         height += 100
 
 # reads out given text with the text to speech
@@ -108,7 +117,7 @@ def handle_arrow_view(type):
 
 def read_off_list():
     global possible_moves
-
+    
     for i in possible_moves:
         # if the side of the piece is not 'N' then there is a piece there
         if (i.piece.side != 'N'):
@@ -119,6 +128,7 @@ def read_off_list():
 # if the user has typed in a row col combination
 def handle_moving_start(current_tile):
     global possible_moves
+    
     tile = get_tile_from_location(current_tile) # gets what is on that tile
 
     # if there are no pieces on the given tile, the player cannot move
@@ -134,104 +144,98 @@ def handle_moving_start(current_tile):
         if len(possible_moves) > 0:
             read("The piece on this tile can move to")
             read_off_list()
-
-            handle_moving_end(tile) # start checking for where to move to
         else:
             # if the possible moves array is empty the player cannot move
             read("There are no possible places for this piece to move to")
 
 # handles selecting where a piece can move to
-def handle_moving_end(tile_to_move):
+def handle_moving_end(selected_piece, moving_to):
     global possible_moves
     
+    start_tile = get_tile_from_location(selected_piece)
+    end_tile = get_tile_from_location(moving_to)
 
-    waiting = True # waiting for the users input
-    current_tile = "" # a chess location A8 C4 etc
+    # if the new tile is one of the possible moves
+    if get_tile_from_location(moving_to) in possible_moves:
+        move(start_tile, end_tile)  # move the piece on the tile to the new tile
 
-    while(waiting):
-        for event in pygame.event.get():
-             # if the user pressed a key
-            if event.type == pygame.KEYDOWN:
-                key_value = event.key
-                # if the pressed key is between a-h and there is nothing in the current tile tracking
-                if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
-                    current_tile = chr(key_value)
-                # if the pressed key is between 1-8 and a-h was selected before
-                elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
-                    current_tile += chr(key_value)
+        #changes the turn
+        if settings.turn == 'W':
+            settings.turn = 'B'
+        else:
+            settings.turn = 'W'
 
-                    # if the new tile is one of the possible moves
-                    if get_tile_from_location(current_tile) in possible_moves:
-                        move(tile_to_move, get_tile_from_location(current_tile))  # move the piece on the tile to the new tile
-                        pygame.display.flip() #update the board
+        # confirm movement to player
+        #read(f'{start_tile.location} {end_tile.piece.type} moving to {end_tile}')
+        read("It is now the other player's turn")
+    else:
+        read(f'{moving_to} is an illegal move')
 
-                        #changes the turn
-                        if settings.turn == 'W':
-                            settings.turn = 'B'
-                        else:
-                            settings.turn = 'W'
-
-                        # confirm movement to player
-                        read(f'{tile_to_move.location} {get_tile_from_location(current_tile).piece.type} moving to {current_tile}')
-                        read("It is now the other player's turn")
-                    else:
-                        read(f'{current_tile} is an illegal move')
-
-                    current_tile = ""
-                    waiting = False
-                # pressed 'r'
-                elif int(key_value) == 114:
-                    read_off_list()
-                # pressed 'q
-                # elif int(key_value) == 113:
-                #     read("Canceling movement")
-                #     waiting = False # stop the loop
+def key_react(key_value, selected_piece):
+    # if the pressed key is between a-h and there is nothing in the current tile tracking
+    if 97 <= int(key_value) <= 104 and len(selected_piece) == 0:
+        selected_piece = chr(key_value)
+    # if the pressed key is between 1-8 and a-h was selected before
+    elif 49 <= int(key_value) <= 56 and len(selected_piece) == 1:
+        selected_piece += chr(key_value)
+            
+    elif key_value == pygame.K_UP:
+        # the player has moved their 'visual' adjust row col
+        handle_arrow_view("U")
+    elif key_value == pygame.K_RIGHT:
+        # the player has moved their 'visual' adjust row col
+        handle_arrow_view("R")
+    elif key_value == pygame.K_DOWN:
+        # the player has moved their 'visual' adjust row col
+        handle_arrow_view("D")
+    elif key_value == pygame.K_LEFT:
+        # the player has moved their 'visual' adjust row col
+        handle_arrow_view("L")
+    else: 
+        selected_piece = ""
+    
+    return selected_piece
 
 def start_display():
     pygame.init() # initalizing pygame
 
-    # determing size and fonts
-    window_size = (1920, 1000) 
-    screen = pygame.display.set_mode(window_size, pygame.RESIZABLE)
-    font = pygame.font.SysFont(None, 80)
-    piece_font = pygame.font.Font("./assets/segoe-ui-symbol.ttf",80)
+    global SCREEN; global FONT; global PIECE_FONT; global possible_moves
+    SCREEN = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
+    FONT = pygame.font.SysFont(None, 80)
+    PIECE_FONT = pygame.font.Font("./assets/segoe-ui-symbol.ttf",80)
     
-    current_tile = "" # for if the user is trying to select a tile
+    selected_piece = "" # for if the user is trying to select a tile
+    moving_to = "" # for if the user is trying to select a tile
+    read = False
 
     # a pygame loop that runs while the user is playing
     while True:
+        print("White" + str(check_mate('W')))
+        print("Black" + str(check_mate('B')))
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
-            # if the user pressed a key
+                
             if event.type == pygame.KEYDOWN:
-                key_value = event.key
-                # if the pressed key is between a-h and there is nothing in the current tile tracking
-                if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
-                    current_tile = chr(key_value)
-                # if the pressed key is between 1-8 and a-h was selected before
-                elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
-                    current_tile += chr(key_value)
-                    handle_moving_start(current_tile) # we have a chess location and will start the move process
-                    current_tile = "" # reset current tile
-                elif event.key == pygame.K_UP:
-                    # the player has moved their 'visual' adjust row col
-                    handle_arrow_view("U")
-                elif event.key == pygame.K_RIGHT:
-                    # the player has moved their 'visual' adjust row col
-                    handle_arrow_view("R")
-                elif event.key == pygame.K_DOWN:
-                    # the player has moved their 'visual' adjust row col
-                    handle_arrow_view("D")
-                elif event.key == pygame.K_LEFT:
-                    # the player has moved their 'visual' adjust row col
-                    handle_arrow_view("L")
-                else: 
-                    current_tile = ""
+                if len(selected_piece) != 2:
+                    selected_piece = key_react(event.key, selected_piece)
+                    
+                elif len(moving_to) != 2:
+                    moving_to = key_react(event.key, moving_to)
+            
+            if len(selected_piece) == 2 and not read:
+                handle_moving_start(selected_piece)
+                read = True
+            elif len(moving_to) == 2:
+                handle_moving_end(selected_piece, moving_to)
+                possible_moves = []
+                selected_piece = ""
+                moving_to = ""
+                    
 
-        displayBoard(screen, piece_font) # display whats on the board
-        displayColumns(screen, font) # show column letters
-        displayRows(screen, font) # show row numbers
+        displayBoard() # display whats on the board
+        displayColumns() # show column letters
+        displayRows() # show row numbers
         pygame.display.flip() #update the board
