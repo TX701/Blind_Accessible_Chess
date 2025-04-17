@@ -6,15 +6,16 @@ from py.movement import move_manager
 
 # constant color values
 WHITE = (255,255,255)
-YELLOW = (255,255,143)
 BROWN = (180,135,100)
 TAN = (240,216,181)
 LIGHTGREEN = (67,93,73)
 BLACK = (0,0,0)
+YELLOW = (255,255,143)
+BLUE = (30,144,255)
 
 engine = pyttsx3.init()
-
 viewing_row = -1; viewing_col = -1 # for if the user is viewing the board
+possible_moves = []
 
 def displayBoard(screen, font):
     pygame.draw.rect(screen,LIGHTGREEN,(0,0,1920,1080)) # set background color
@@ -31,6 +32,9 @@ def displayBoard(screen, font):
 
             if (viewing_row != -1 and viewing_col != -1) and c == viewing_row and r == viewing_col:
                 pygame.draw.rect(screen, YELLOW, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
+
+            # if settings.board[c][r] in possible_moves:
+            #     pygame.draw.rect(screen, BLUE, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if a piece is able to move to this tile- add a boarder to it
 
             # set the text on the tile to be the current piece that is in that spot on the board
             text = font.render(settings.board[c][r].piece.name, True, (0, 0, 0)) 
@@ -102,7 +106,9 @@ def handle_arrow_view(type):
     get_information() # return what the given row col contains
     # if the user was going to go off the board the previous value will be read (since the users movement was prevented)
 
-def read_off_list(possible_moves):
+def read_off_list():
+    global possible_moves
+
     for i in possible_moves:
         # if the side of the piece is not 'N' then there is a piece there
         if (i.piece.side != 'N'):
@@ -112,6 +118,7 @@ def read_off_list(possible_moves):
 
 # if the user has typed in a row col combination
 def handle_moving_start(current_tile):
+    global possible_moves
     tile = get_tile_from_location(current_tile) # gets what is on that tile
 
     # if there are no pieces on the given tile, the player cannot move
@@ -126,15 +133,18 @@ def handle_moving_start(current_tile):
     
         if len(possible_moves) > 0:
             read("The piece on this tile can move to")
-            read_off_list(possible_moves)
+            read_off_list()
 
-            handle_moving_end(tile, possible_moves) # start checking for where to move to
+            handle_moving_end(tile) # start checking for where to move to
         else:
             # if the possible moves array is empty the player cannot move
             read("There are no possible places for this piece to move to")
 
 # handles selecting where a piece can move to
-def handle_moving_end(tile_to_move, possible_moves):
+def handle_moving_end(tile_to_move):
+    global possible_moves
+    
+
     waiting = True # waiting for the users input
     current_tile = "" # a chess location A8 C4 etc
 
@@ -171,7 +181,7 @@ def handle_moving_end(tile_to_move, possible_moves):
                     waiting = False
                 # pressed 'r'
                 elif int(key_value) == 114:
-                    read_off_list(possible_moves)
+                    read_off_list()
                 # pressed 'q
                 # elif int(key_value) == 113:
                 #     read("Canceling movement")
