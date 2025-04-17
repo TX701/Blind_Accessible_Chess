@@ -1,7 +1,7 @@
 import pygame, sys
 import py.settings as settings
 import pyttsx3
-from py.chess import get_col_chess, get_tile_from_location, move
+from py.chess import *
 from py.movement import move_manager
 import py.engine as sieng
 
@@ -148,7 +148,6 @@ def handle_moving_end(tile_to_move, possible_moves):
                     if get_tile_from_location(current_tile) in possible_moves:
                         move(tile_to_move, get_tile_from_location(current_tile))  # move the piece on the tile to the new tile
                         pygame.display.flip() #update the board
-
                         # confirm movement to player
                         read(f'{tile_to_move.location} {get_tile_from_location(current_tile).piece.type} moving to {current_tile}')
                         read("It is now the other player's turn")
@@ -165,8 +164,6 @@ def handle_moving_end(tile_to_move, possible_moves):
                 elif int(key_value) == 113:
                     read("Canceling movement")
                     waiting = False # stop the loop
-    # now let the engine make a move
-    sieng.rand_move(settings.eng)
 
 def start_display():
     pygame.init() # initalizing pygame
@@ -187,8 +184,17 @@ def start_display():
                 pygame.quit()
                 sys.exit()
 
+            if is_in_check(settings.player_color):
+                read("you are in check")
+            if is_in_check(settings.eng.side):
+                read("opponent is in check")
+
+            if settings.turn != settings.player_color:
+                # now let the engine make a move
+                sieng.rand_move(settings.eng)
+
             # if the user pressed a key
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
                 key_value = event.key
                 # if the pressed key is between a-h and there is nothing in the current tile tracking
                 if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
@@ -198,6 +204,7 @@ def start_display():
                     current_tile += chr(key_value)
                     handle_moving_start(current_tile) # we have a chess location and will start the move process
                     current_tile = "" # reset current tile
+
                 elif event.key == pygame.K_UP:
                     # the player has moved their 'visual' adjust row col
                     viewing_row, viewing_col = handle_arrow_view("U", viewing_row, viewing_col)
@@ -213,7 +220,7 @@ def start_display():
                 else: 
                     current_tile = ""
 
-        displayBoard(screen, piece_font) # display whats on the board
-        displayColumns(screen, font) # show column letters
-        displayRows(screen, font) # show row numbers
-        pygame.display.flip() #update the board
+            displayBoard(screen, piece_font) # display whats on the board
+            displayColumns(screen, font) # show column letters
+            displayRows(screen, font) # show row numbers
+            pygame.display.flip() #update the board

@@ -34,5 +34,7 @@ def rand_move(e):
                     game.read(text)
                     ch.move(rand_tile, target_tile)
                     break
+    if ch.is_in_check(settings.player_color):
+        game.read("You are in check!")
 
 
