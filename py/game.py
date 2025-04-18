@@ -1,8 +1,9 @@
 import pygame, sys
 import py.settings as settings
 import pyttsx3
-from py.chess import get_col_chess, get_tile_from_location, move, check_mate
+from py.chess import *
 from py.movement import move_manager
+import py.engine as sieng
 
 # constant color values
 WHITE = (255,255,255)
@@ -21,30 +22,28 @@ PIECE_FONT = None
 
 engine = pyttsx3.init()
 
-viewing_row = -1; viewing_col = -1 # for if the user is viewing the board
 possible_moves = []
+viewing_row = -1; viewing_col = -1 # for if the user is viewing the board
 
 def displayBoard():
     pygame.draw.rect(SCREEN,LIGHTGREEN,(0,0,1920,1080)) # set background color
     pygame.draw.rect(SCREEN,BLACK,(350,130,820,820), width = 10) # set chessboard color
-    global viewing_row; global viewing_col
 
+    global viewing_row; global viewing_col
+    
     for r in range(8):
-        global possible_moves
-        
         for c in range(8):
-            # to create the checkerboard pattern if r and c are both odd or both even color the tile tan         
-            if ((r % 2 == 0) and (c % 2 == 0)) or ((r %2 == 1) and (c%2 == 1)):
-                square = pygame.draw.rect(SCREEN, TAN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
+            # to create the checkerboard pattern if r and c are both odd or both even color the tile tan
+            if ((r % 2 == 0) and (c % 2 == 0)) or ((r % 2 == 1) and (c % 2 == 1)):
+                square = pygame.draw.rect(SCREEN, TAN, (360 + (r * 100), 140 + (c * 100), 100, 100))
             else:
-                square = pygame.draw.rect(SCREEN, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100), 0)
+                square = pygame.draw.rect(SCREEN, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100))
 
             if (viewing_row != -1 and viewing_col != -1) and c == viewing_row and r == viewing_col:
                 pygame.draw.rect(SCREEN, YELLOW, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
-                
-            if settings.board[c][r] in possible_moves:
-                pygame.draw.rect(SCREEN, BLUE, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if a piece is able to move to this tile- add a boarder to it
 
+            # if settings.board[c][r] in possible_moves:
+            #     pygame.draw.rect(SCREEN, BLUE, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
 
             # set the text on the tile to be the current piece that is in that spot on the board
             text = PIECE_FONT.render(settings.board[c][r].piece.name, True, (0, 0, 0)) 
@@ -71,9 +70,11 @@ def displayRows():
 
 # reads out given text with the text to speech
 def read(text):
+    # engine.setProperty('rate', 400)  #change this to be slower, this is just for my sanity rn
     engine.say(text)
-    engine.runAndWait() 
+    engine.runAndWait()
     engine.stop()
+
 
 # reads off whos turn its is currently
 def turn_update():
@@ -113,11 +114,10 @@ def handle_arrow_view(type):
         viewing_col = viewing_col - 1 if viewing_col != 0 else viewing_col
         
     get_information() # return what the given row col contains
-    # if the user was going to go off the board the previous value will be read (since the users movement was prevented)
 
 def read_off_list():
     global possible_moves
-    
+
     for i in possible_moves:
         # if the side of the piece is not 'N' then there is a piece there
         if (i.piece.side != 'N'):
@@ -128,7 +128,6 @@ def read_off_list():
 # if the user has typed in a row col combination
 def handle_moving_start(current_tile):
     global possible_moves
-    
     tile = get_tile_from_location(current_tile) # gets what is on that tile
 
     # if there are no pieces on the given tile, the player cannot move
@@ -144,41 +143,57 @@ def handle_moving_start(current_tile):
         if len(possible_moves) > 0:
             read("The piece on this tile can move to")
             read_off_list()
+
+            handle_moving_end(tile) # start checking for where to move to
         else:
             # if the possible moves array is empty the player cannot move
             read("There are no possible places for this piece to move to")
 
 # handles selecting where a piece can move to
-def handle_moving_end(selected_piece, moving_to):
+def handle_moving_end(tile_to_move):
     global possible_moves
-    
-    start_tile = get_tile_from_location(selected_piece)
-    end_tile = get_tile_from_location(moving_to)
+    waiting = True # waiting for the users input
+    current_tile = "" # a chess location A8 C4 etc
 
-    # if the new tile is one of the possible moves
-    if get_tile_from_location(moving_to) in possible_moves:
-        move(start_tile, end_tile)  # move the piece on the tile to the new tile
+    while(waiting):
+        for event in pygame.event.get():
+             # if the user pressed a key
+            if event.type == pygame.KEYDOWN:
+                key_value = event.key
+                # if the pressed key is between a-h and there is nothing in the current tile tracking
+                if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
+                    current_tile = chr(key_value)
+                # if the pressed key is between 1-8 and a-h was selected before
+                elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
+                    current_tile += chr(key_value)
 
-        #changes the turn
-        if settings.turn == 'W':
-            settings.turn = 'B'
-        else:
-            settings.turn = 'W'
+                    # if the new tile is one of the possible moves
+                    if get_tile_from_location(current_tile) in possible_moves:
+                        move(tile_to_move, get_tile_from_location(current_tile))  # move the piece on the tile to the new tile
+                        pygame.display.flip() #update the board
+                        # confirm movement to player
+                        read(f'{tile_to_move.location} {get_tile_from_location(current_tile).piece.type} moving to {current_tile}')
+                        read("It is now the other player's turn")
+                    else:
+                        read(f'{current_tile} is an illegal move')
 
-        # confirm movement to player
-        #read(f'{start_tile.location} {end_tile.piece.type} moving to {end_tile}')
-        read("It is now the other player's turn")
-    else:
-        read(f'{moving_to} is an illegal move')
+                    current_tile = ""
+                    waiting = False
 
-def key_react(key_value, selected_piece):
+                # pressed 'r'
+                elif int(key_value) == 114:
+                    read_off_list()
+
+def handle_presses(key_value, current_tile):
     # if the pressed key is between a-h and there is nothing in the current tile tracking
-    if 97 <= int(key_value) <= 104 and len(selected_piece) == 0:
-        selected_piece = chr(key_value)
+    if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
+        current_tile = chr(key_value)
     # if the pressed key is between 1-8 and a-h was selected before
-    elif 49 <= int(key_value) <= 56 and len(selected_piece) == 1:
-        selected_piece += chr(key_value)
-            
+    elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
+        current_tile += chr(key_value)
+        handle_moving_start(current_tile) # we have a chess location and will start the move process
+        current_tile = "" # reset current tile
+
     elif key_value == pygame.K_UP:
         # the player has moved their 'visual' adjust row col
         handle_arrow_view("U")
@@ -192,48 +207,41 @@ def key_react(key_value, selected_piece):
         # the player has moved their 'visual' adjust row col
         handle_arrow_view("L")
     else: 
-        selected_piece = ""
+        current_tile = ""
     
-    return selected_piece
+    return current_tile
 
 def start_display():
+    global viewing_row; global viewing_col; global SCREEN; global FONT; global PIECE_FONT
     pygame.init() # initalizing pygame
 
-    global SCREEN; global FONT; global PIECE_FONT; global possible_moves
+    # determing size and fonts
     SCREEN = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
     FONT = pygame.font.SysFont(None, 80)
     PIECE_FONT = pygame.font.Font("./assets/segoe-ui-symbol.ttf",80)
     
-    selected_piece = "" # for if the user is trying to select a tile
-    moving_to = "" # for if the user is trying to select a tile
-    read = False
+    current_tile = "" # for if the user is trying to select a tile
 
     # a pygame loop that runs while the user is playing
     while True:
-        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-                
-            if event.type == pygame.KEYDOWN:
-                if len(selected_piece) != 2:
-                    selected_piece = key_react(event.key, selected_piece)
-                    
-                elif len(moving_to) != 2:
-                    moving_to = key_react(event.key, moving_to)
-            
-            if len(selected_piece) == 2 and not read:
-                handle_moving_start(selected_piece)
-                read = True
-            elif len(moving_to) == 2:
-                handle_moving_end(selected_piece, moving_to)
-                possible_moves = []
-                selected_piece = ""
-                moving_to = ""
-                    
 
-        displayBoard() # display whats on the board
-        displayColumns() # show column letters
-        displayRows() # show row numbers
-        pygame.display.flip() #update the board
+            # if is_in_check(settings.player_color):
+            #     read("you are in check")
+            # if is_in_check(settings.eng.side):
+            #     read("opponent is in check")
+
+            if settings.turn != settings.player_color:
+                sieng.rand_move(settings.eng) # now let the engine make a move
+
+            # if the user pressed a key
+            elif event.type == pygame.KEYDOWN:
+                current_tile = handle_presses(event.key, current_tile)
+
+            displayBoard() # display whats on the board
+            displayColumns() # show column letters
+            displayRows() # show row numbers
+            pygame.display.flip() #update the board

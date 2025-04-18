@@ -33,8 +33,9 @@ def get_pieces(side):
 # simple move function
 def move(tile, end_tile):
     if tile.piece.type != None:  # if the tile (with the piece you want to move) has a piece
-        end_tile.piece = tile.piece  # for the tile youre moving to, change its piece to the given tiles piece
-        tile.piece = Piece(None, " ", 'N')  # for the given tile set its piece to an empty Piece
+        if end_tile.piece.side != settings.turn:
+            end_tile.piece = tile.piece  # for the tile youre moving to, change its piece to the given tiles piece
+            tile.piece = Piece(None, " ", 'N')  # for the given tile set its piece to an empty Piece
 
     # changes the turn
     if settings.turn == 'W':
@@ -52,7 +53,8 @@ def is_in_check(side):
         opposing_possible_moves = move_manager(tile_with_piece)
         
         for element in opposing_possible_moves:
-            if element.piece.type == "King": # if one of the pieces from the opposing team can move to the king, place in check (is this correct?)
+            if element.piece.type == "King" and element.piece.side == side: # if one of the pieces from the opposing team can move to the king, place in check (is this correct?)
+                print("check is working")
                 return True
     
     return False
@@ -110,7 +112,7 @@ def tile_set_up():
     tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♗", 'W')))
     tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
     tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
-
+    
 # given a row and col returns what piece should be there (used when building the board)
 def get_tile(r, c):
     for tile in tiles:
