@@ -70,7 +70,7 @@ def displayRows():
 
 # reads out given text with the text to speech
 def read(text):
-    # engine.setProperty('rate', 400)  #change this to be slower, this is just for my sanity rn
+    # engine.setProperty('rate', 400)  #change this to be slower later
     engine.say(text)
     engine.runAndWait()
     engine.stop()
@@ -130,30 +130,6 @@ def read_off_list():
             read(f'{i.location} {side} {i.piece.type}') # read location side and piece
         else: read(i.location) # if there is no piece just read the location
 
-def turn_end():
-    global in_check
-
-    # changes the turn
-    if settings.turn == 'W':
-        settings.turn = 'B'
-    else:
-        settings.turn = 'W'
-    
-    # check for check or checkmate
-    if is_in_check('W') is not False:
-        in_check = 'W'
-        if is_in_check_mate('W'):
-            read("White in checkmate")
-        else: read("White in check")
-
-    elif is_in_check('B') is not False:
-        in_check = 'B'
-        if is_in_check_mate('B'):
-            read("Black in checkmate")
-        else: read("Black in check")
-    else: in_check = None
-    read("It is now the other player's turn")
-
 # if the user has typed in a row col combination
 def handle_moving_start(tile_to_move):
     global possible_moves
@@ -182,7 +158,7 @@ def handle_moving_start(tile_to_move):
 
 # handles selecting where a piece can move to
 def handle_moving_end(tile_to_move, tile_to_move_to):
-    global possible_moves
+    global possible_moves; global in_check
 
     starting_tile = get_tile_from_location(tile_to_move)
     ending_tile = get_tile_from_location(tile_to_move_to)
@@ -193,7 +169,22 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
         read(f'{starting_tile.location} {starting_tile.piece.type} moving to {tile_to_move_to}')
         move(starting_tile, ending_tile)  # move the piece on the tile to the new tile
 
-        turn_end()
+        
+        
+        if is_in_check('W') is not False:
+            in_check = 'W'
+            if is_in_check_mate('W'):
+                read("White in checkmate")
+            else: read("White in check")
+
+        elif is_in_check('B') is not False:
+            in_check = 'B'
+            if is_in_check_mate('B'):
+                read("Black in checkmate")
+            else: read("Black in check")
+        else: in_check = None
+        
+        read("It is now the other player's turn")
     else:
         read(f'{tile_to_move_to} is an illegal move')
     

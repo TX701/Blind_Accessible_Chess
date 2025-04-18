@@ -36,6 +36,12 @@ def move(tile, end_tile):
         if end_tile.piece.side != settings.turn:
             end_tile.piece = tile.piece  # for the tile youre moving to, change its piece to the given tiles piece
             tile.piece = Piece(None, " ", 'N')  # for the given tile set its piece to an empty Piece
+    
+    # changes the turn
+        if settings.turn == 'W':
+            settings.turn = 'B'
+        else:
+            settings.turn = 'W'
 
 # get a sides king piece
 def get_king(side):
