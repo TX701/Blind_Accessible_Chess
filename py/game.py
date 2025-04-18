@@ -120,6 +120,12 @@ def read_off_list():
 
     for i in possible_moves:
         # if the side of the piece is not 'N' then there is a piece there
+        for event in pygame.event.get():
+             # if the user pressed a key
+            if event.type == pygame.KEYDOWN:
+                if event.key == 113:
+                    return None
+
         if (i.piece.side != 'N'):
             side = "Black" if i.piece.side == "B" else "White"
             read(f'{i.location} {side} {i.piece.type}') # read location side and piece
