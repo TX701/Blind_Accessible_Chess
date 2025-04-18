@@ -54,7 +54,6 @@ def get_king(side):
 # check if a side can capture a specific piece
 def can_capture(capturing_side, tile_to_capture):
     capture_piece = []
-
     tiles_with_pieces = get_pieces(capturing_side) # get all pieces from the side that wants to capture 
 
     for tile_with_piece in tiles_with_pieces:
@@ -65,6 +64,13 @@ def can_capture(capturing_side, tile_to_capture):
                 capture_piece.append(tile_with_piece)
 
     return capture_piece
+
+def can_block(possible_check_tile, side_in_check):
+    # move all pieces in side_in_check to all their possible possible moves
+    # if one removes king from possible_check_tiles movement list- return true
+    # if nothing can prevent the king from being captured- return false
+
+    return ""
     
 #checks if given side is in check
 def is_in_check(side):
