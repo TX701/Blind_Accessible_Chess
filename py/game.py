@@ -42,8 +42,8 @@ def displayBoard():
             if (viewing_row != -1 and viewing_col != -1) and c == viewing_row and r == viewing_col:
                 pygame.draw.rect(SCREEN, YELLOW, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
 
-            # if settings.board[c][r] in possible_moves:
-            #     pygame.draw.rect(SCREEN, BLUE, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
+            if settings.board[c][r] in possible_moves:
+                pygame.draw.rect(SCREEN, BLUE, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
 
             # set the text on the tile to be the current piece that is in that spot on the board
             text = PIECE_FONT.render(settings.board[c][r].piece.name, True, (0, 0, 0)) 
@@ -74,7 +74,6 @@ def read(text):
     engine.say(text)
     engine.runAndWait()
     engine.stop()
-
 
 # reads off whos turn its is currently
 def turn_update():
@@ -132,74 +131,80 @@ def read_off_list():
         else: read(i.location) # if there is no piece just read the location
 
 # if the user has typed in a row col combination
-def handle_moving_start(current_tile):
+def handle_moving_start(tile_to_move):
     global possible_moves
-    tile = get_tile_from_location(current_tile) # gets what is on that tile
+    tile = get_tile_from_location(tile_to_move) # gets what is on that tile
 
     # if there are no pieces on the given tile, the player cannot move
     if tile.piece.type == None:
-        read("There are no pieces on this tile")
+        read("There are no pieces on this tile" + str(tile.location))
     elif tile.piece.side != settings.turn:
         read("This is the opponent's piece, you are not allowed to move it") 
     else:
         side = "Black" if tile.piece.side == "B" else "White" if tile.piece.side == "W" else ""
-        read(f'Selected {current_tile} {side} {tile.piece.type}') # reads off the location color and piece
+        read(f'Selected {tile_to_move} {side} {tile.piece.type}') # reads off the location color and piece
         possible_moves = move_manager(tile) # gets where the piece on the given tile can move to
     
         if len(possible_moves) > 0:
             read("The piece on this tile can move to")
             read_off_list()
 
-            handle_moving_end(tile) # start checking for where to move to
+            return tile_to_move
         else:
             # if the possible moves array is empty the player cannot move
             read("There are no possible places for this piece to move to")
+    
+    return ""
 
 # handles selecting where a piece can move to
-def handle_moving_end(tile_to_move):
+def handle_moving_end(tile_to_move, tile_to_move_to):
     global possible_moves
-    waiting = True # waiting for the users input
-    current_tile = "" # a chess location A8 C4 etc
 
-    while(waiting):
-        for event in pygame.event.get():
-             # if the user pressed a key
-            if event.type == pygame.KEYDOWN:
-                key_value = event.key
-                # if the pressed key is between a-h and there is nothing in the current tile tracking
-                if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
-                    current_tile = chr(key_value)
-                # if the pressed key is between 1-8 and a-h was selected before
-                elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
-                    current_tile += chr(key_value)
+    starting_tile = get_tile_from_location(tile_to_move)
+    ending_tile = get_tile_from_location(tile_to_move_to)
 
-                    # if the new tile is one of the possible moves
-                    if get_tile_from_location(current_tile) in possible_moves:
-                        move(tile_to_move, get_tile_from_location(current_tile))  # move the piece on the tile to the new tile
-                        pygame.display.flip() #update the board
-                        # confirm movement to player
-                        read(f'{tile_to_move.location} {get_tile_from_location(current_tile).piece.type} moving to {current_tile}')
-                        read("It is now the other player's turn")
-                    else:
-                        read(f'{current_tile} is an illegal move')
+    # if the new tile is one of the possible moves
+    if ending_tile in possible_moves:
+        # confirm movement to player
+        read(f'{starting_tile.location} {starting_tile.piece.type} moving to {tile_to_move_to}')
+        move(starting_tile, ending_tile)  # move the piece on the tile to the new tile
+        
+        read("It is now the other player's turn")
 
-                    current_tile = ""
-                    waiting = False
+        # check for check
+        if is_in_check(settings.player_color):
+            print("you are in check")
+        if is_in_check(settings.eng.side):
+            print("opponent is in check")
 
-                # pressed 'r'
-                elif int(key_value) == 114:
-                    read_off_list()
+        # if check check for checkmate
+    else:
+        read(f'{tile_to_move_to} is an illegal move')
+    
+    possible_moves = []
 
-def handle_presses(key_value, current_tile):
+
+def handle_presses(key_value, tile_to_move, tile_to_move_to):
     # if the pressed key is between a-h and there is nothing in the current tile tracking
-    if 97 <= int(key_value) <= 104 and len(current_tile) == 0:
-        current_tile = chr(key_value)
+    if 97 <= int(key_value) <= 104 and len(tile_to_move) == 0 or (len(tile_to_move) == 2 and len(tile_to_move_to) == 0):
+        if len(tile_to_move) == 0:
+            tile_to_move = chr(key_value)
+        elif len(tile_to_move_to) == 0:
+            tile_to_move_to = chr(key_value)
     # if the pressed key is between 1-8 and a-h was selected before
-    elif 49 <= int(key_value) <= 56 and len(current_tile) == 1:
-        current_tile += chr(key_value)
-        handle_moving_start(current_tile) # we have a chess location and will start the move process
-        current_tile = "" # reset current tile
+    elif 49 <= int(key_value) <= 56 and len(tile_to_move) == 1 or (len(tile_to_move) == 2 and len(tile_to_move_to) == 1):
+        if len(tile_to_move) == 1:
+            tile_to_move += chr(key_value)
+            tile_to_move = handle_moving_start(tile_to_move) # we have a chess location and will start the move process
+        elif len(tile_to_move_to) == 1:
+            tile_to_move_to += chr(key_value)
+            handle_moving_end(tile_to_move, tile_to_move_to)
 
+            tile_to_move = ""; tile_to_move_to = "" # reset tiles
+
+        print(f'start: {tile_to_move} end: {tile_to_move_to}')
+        
+        
     elif key_value == pygame.K_UP:
         # the player has moved their 'visual' adjust row col
         handle_arrow_view("U")
@@ -213,9 +218,10 @@ def handle_presses(key_value, current_tile):
         # the player has moved their 'visual' adjust row col
         handle_arrow_view("L")
     else: 
-        current_tile = ""
+        print(key_value)
+        tile_to_move = ""
     
-    return current_tile
+    return tile_to_move, tile_to_move_to
 
 def start_display():
     global viewing_row; global viewing_col; global SCREEN; global FONT; global PIECE_FONT
@@ -226,7 +232,13 @@ def start_display():
     FONT = pygame.font.SysFont(None, 80)
     PIECE_FONT = pygame.font.Font("./assets/segoe-ui-symbol.ttf",80)
     
-    current_tile = "" # for if the user is trying to select a tile
+    tile_to_move = "" # for if the user is trying to select a tile
+    tile_to_move_to = "" # for if the user is trying to select a tile to move to
+
+    if is_in_check(settings.player_color):
+        print("you are in check")
+    if is_in_check(settings.eng.side):
+        print("opponent is in check")
 
     # a pygame loop that runs while the user is playing
     while True:
@@ -235,17 +247,12 @@ def start_display():
                 pygame.quit()
                 sys.exit()
 
-            # if is_in_check(settings.player_color):
-            #     read("you are in check")
-            # if is_in_check(settings.eng.side):
-            #     read("opponent is in check")
-
             if settings.turn != settings.player_color:
                 sieng.rand_move(settings.eng) # now let the engine make a move
 
             # if the user pressed a key
             elif event.type == pygame.KEYDOWN:
-                current_tile = handle_presses(event.key, current_tile)
+                tile_to_move, tile_to_move_to = handle_presses(event.key, tile_to_move, tile_to_move_to)
 
             displayBoard() # display whats on the board
             displayColumns() # show column letters

@@ -43,6 +43,10 @@ def move(tile, end_tile):
     else:
         settings.turn = 'W'
 
+    # check for check
+    # print(f'check: {is_in_check(end_tile.piece.side)} {end_tile.piece.side}')
+    # check for checkmate
+    # print(f'checkmate: {check_mate(end_tile.piece.side)} {end_tile.piece.side}')
 
 #checks if given side is in check
 def is_in_check(side):
@@ -54,7 +58,6 @@ def is_in_check(side):
         
         for element in opposing_possible_moves:
             if element.piece.type == "King" and element.piece.side == side: # if one of the pieces from the opposing team can move to the king, place in check (is this correct?)
-                print("check is working")
                 return True
     
     return False
@@ -63,17 +66,18 @@ def is_in_check(side):
 def block_check(tile_with_piece):
     possible_moves = move_manager(tile_with_piece)
     
-    for tile in possible_moves:
-        original_tile = tile_with_piece
-        original_possible_move_tile = tile
-        
-        move(tile_with_piece, tile)
-        
-        if not is_in_check(tile_with_piece.piece.side):
-            return True
-        
-        move(tile_with_piece, original_tile)
-        move(tile, original_possible_move_tile)
+    if possible_moves is not None:
+        for tile in possible_moves:
+            original_tile = tile_with_piece
+            original_possible_move_tile = tile
+            
+            move(tile_with_piece, tile)
+            
+            if not is_in_check(tile_with_piece.piece.side):
+                return True
+            
+            move(tile_with_piece, original_tile)
+            move(tile, original_possible_move_tile)
         
     return False
 
@@ -112,6 +116,10 @@ def tile_set_up():
     tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♗", 'W')))
     tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
     tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
+
+    # tiles.append(Tile(5, 6, convert_to_location(5, 6), Piece("Pawn", "♟", 'B')))
+    # tiles.append(Tile(4, 6, convert_to_location(4, 6), Piece("Pawn", "♟", 'B')))
+    # tiles.append(Tile(3, 6, convert_to_location(3, 6), Piece("Pawn", "♟", 'B')))
     
 # given a row and col returns what piece should be there (used when building the board)
 def get_tile(r, c):
@@ -133,18 +141,17 @@ def get_tile_from_location(location):
 def create_board():
     tile_set_up() # initalizing tiles
 
-    board = []
+    board = []; 
     for r in range(8):
         row = []
+
         for c in range(8):
             tile = get_tile(r, c)
-
             if tile is not None:
                 row.append(tile) # if there is supposed to be a tile at this given row col- add it
             else:
-                # if there is not tile here create a 'None' one
                 row.append(Tile(c, r, convert_to_location(c, r), Piece(None, " ", 'N')))
-                # our 'None' tile still has some attributes to avoid Noneobject errors
+
         board.append(row)
 
     return board

@@ -49,7 +49,6 @@ def move_manager(tile):
 
 #returns list of all possible moves for a specific tile with a hypothetical piece on it
 def move_future(tile, type):
-
     if (type == "Pawn"):
         return pawnMovement(tile)
     elif (type == "Rook"):
