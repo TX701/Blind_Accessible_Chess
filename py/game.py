@@ -170,14 +170,6 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
         move(starting_tile, ending_tile)  # move the piece on the tile to the new tile
         
         read("It is now the other player's turn")
-
-        # check for check
-        if is_in_check(settings.player_color):
-            print("you are in check")
-        if is_in_check(settings.eng.side):
-            print("opponent is in check")
-
-        # if check check for checkmate
     else:
         read(f'{tile_to_move_to} is an illegal move')
     
@@ -201,9 +193,6 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
             handle_moving_end(tile_to_move, tile_to_move_to)
 
             tile_to_move = ""; tile_to_move_to = "" # reset tiles
-
-        print(f'start: {tile_to_move} end: {tile_to_move_to}')
-        
         
     elif key_value == pygame.K_UP:
         # the player has moved their 'visual' adjust row col
@@ -235,10 +224,15 @@ def start_display():
     tile_to_move = "" # for if the user is trying to select a tile
     tile_to_move_to = "" # for if the user is trying to select a tile to move to
 
-    if is_in_check(settings.player_color):
-        print("you are in check")
-    if is_in_check(settings.eng.side):
-        print("opponent is in check")
+    if is_in_check('W') is not False:
+        read("White in check")
+    if is_in_check('B') is not False:
+        read("Black in check")
+
+    if is_in_check_mate('W'):
+        read("White in checkmate")
+    if is_in_check_mate('B'):
+        read("Black in checkmate")
 
     # a pygame loop that runs while the user is playing
     while True:

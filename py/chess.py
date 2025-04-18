@@ -1,5 +1,5 @@
 import py.settings as settings
-from py.movement import move_manager
+from py.movement import move_manager, same_side
 
 class Piece:
     def __init__(self, type, name, side):
@@ -37,59 +37,62 @@ def move(tile, end_tile):
             end_tile.piece = tile.piece  # for the tile youre moving to, change its piece to the given tiles piece
             tile.piece = Piece(None, " ", 'N')  # for the given tile set its piece to an empty Piece
 
-    # changes the turn
-    if settings.turn == 'W':
-        settings.turn = 'B'
-    else:
-        settings.turn = 'W'
+        # changes the turn
+        if settings.turn == 'W':
+            settings.turn = 'B'
+        else:
+            settings.turn = 'W'
 
-    # check for check
-    # print(f'check: {is_in_check(end_tile.piece.side)} {end_tile.piece.side}')
-    # check for checkmate
-    # print(f'checkmate: {check_mate(end_tile.piece.side)} {end_tile.piece.side}')
+# get a sides king piece
+def get_king(side):
+    tiles = get_pieces(side)
 
-#checks if given side is in check
-def is_in_check(side):
-    opposing_side = 'W' if (side == 'B') else 'B'
-    tiles_with_pieces = get_pieces(opposing_side) # get all pieces from opposing side
+    for tile in tiles:
+        if tile.piece.type == "King":
+            return tile
+
+# check if a side can capture a specific piece
+def can_capture(capturing_side, tile_to_capture):
+    capture_piece = []
+
+    tiles_with_pieces = get_pieces(capturing_side) # get all pieces from the side that wants to capture 
 
     for tile_with_piece in tiles_with_pieces:
         opposing_possible_moves = move_manager(tile_with_piece)
         
         for element in opposing_possible_moves:
-            if element.piece.type == "King" and element.piece.side == side: # if one of the pieces from the opposing team can move to the king, place in check (is this correct?)
-                return True
-    
-    return False
+            if element == tile_to_capture and not same_side(element, tile_with_piece): # if one of the pieces from the opposing team can move to the king, place in check
+                capture_piece.append(tile_with_piece)
 
-# returns true if a check can be avoided false if not (only rudimentary tests)
-def block_check(tile_with_piece):
-    possible_moves = move_manager(tile_with_piece)
+    return capture_piece
     
-    if possible_moves is not None:
-        for tile in possible_moves:
-            original_tile = tile_with_piece
-            original_possible_move_tile = tile
-            
-            move(tile_with_piece, tile)
-            
-            if not is_in_check(tile_with_piece.piece.side):
-                return True
-            
-            move(tile_with_piece, original_tile)
-            move(tile, original_possible_move_tile)
-        
-    return False
+#checks if given side is in check
+def is_in_check(side):
+    opposing_side = 'W' if (side == 'B') else 'B'
+    check_pieces = can_capture(opposing_side, get_king(side))
+
+    if len(check_pieces) > 0:
+        return check_pieces # if in check return a list of tiles that cause the check
+    
+    return False # if not in check return false
 
 # takes in a side and returns true if that side is in checkmate false if that side has possible moves to get out of checkmate
-def check_mate(side):
-    tiles_with_pieces = get_pieces(side)
+def is_in_check_mate(side):
+    check_pieces = is_in_check(side) # will be False if not in check- returns a list of tiles if in check
 
-    for tile_with_piece in tiles_with_pieces:
-        if (block_check(tile_with_piece) is True):
-            return False
+    if type(check_pieces) is list:
+        if len(check_pieces) > 1:
+            return True # if the list is bigger than 1, multiple pieces are attacking the king and the player cannot protect the king (fact check this)
+        elif len(check_pieces) == 1:
+            # if the list is a single element, check if that element can be caputured
+            can_capture_check = can_capture(side, check_pieces[0])
+            if len(can_capture_check) > 0:
+                return False
+            else: 
+                # check if this element can be blocked
+                return True
     
-    return True   
+    return False
 
 tiles = []
 
@@ -108,6 +111,10 @@ def tile_set_up():
         tiles.append(Tile(i - 8, 1, convert_to_location(i - 8, 1), Piece("Pawn", "♟", 'B')))
         tiles.append(Tile(i - 8, 6, convert_to_location(i - 8, 6), Piece("Pawn", "♙", 'W')))
 
+    # tiles.append(Tile(3, 1, convert_to_location(3, 1), Piece("Pawn", "♙", 'W')))
+    # tiles.append(Tile(4, 1, convert_to_location(4, 1), Piece("Pawn", "♙", 'W')))
+    # tiles.append(Tile(5, 1, convert_to_location(5, 1), Piece("Pawn", "♙", 'W')))
+
     tiles.append(Tile(0, 7, "A1", Piece("Rook", "♖", 'W')))
     tiles.append(Tile(1, 7, "B1", Piece("Knight", "♘", 'W')))
     tiles.append(Tile(2, 7, "C1", Piece("Bishop", "♗", 'W')))
@@ -116,10 +123,6 @@ def tile_set_up():
     tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♗", 'W')))
     tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
     tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
-
-    # tiles.append(Tile(5, 6, convert_to_location(5, 6), Piece("Pawn", "♟", 'B')))
-    # tiles.append(Tile(4, 6, convert_to_location(4, 6), Piece("Pawn", "♟", 'B')))
-    # tiles.append(Tile(3, 6, convert_to_location(3, 6), Piece("Pawn", "♟", 'B')))
     
 # given a row and col returns what piece should be there (used when building the board)
 def get_tile(r, c):
