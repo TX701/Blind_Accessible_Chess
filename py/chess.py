@@ -37,12 +37,6 @@ def move(tile, end_tile):
             end_tile.piece = tile.piece  # for the tile youre moving to, change its piece to the given tiles piece
             tile.piece = Piece(None, " ", 'N')  # for the given tile set its piece to an empty Piece
 
-        # changes the turn
-        if settings.turn == 'W':
-            settings.turn = 'B'
-        else:
-            settings.turn = 'W'
-
 # get a sides king piece
 def get_king(side):
     tiles = get_pieces(side)
@@ -95,8 +89,9 @@ def is_in_check_mate(side):
             if len(can_capture_check) > 0:
                 return False
             else: 
-                # check if this element can be blocked
-                return True
+                if can_block:
+                    return False
+                else: return True
     
     return False
 
