@@ -56,16 +56,14 @@ def all_possible_moves(side):
     
     for tile in tiles:
         possible_moves.extend(get_movement(tile))
+        
+    return possible_moves
 
 def get_movement(tile):
     possible_moves = move_manager(tile)
-    in_check = is_in_check(tile.piece.side)
     
     if len(possible_moves) < 1:
         return []
-    
-    if not in_check:
-        return possible_moves
     
     return clean_list(tile, possible_moves)
 
