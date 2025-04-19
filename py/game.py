@@ -185,7 +185,7 @@ def read_off_controls():
         read(line)
         
 def all_moves(side):
-    text = read_all_possible_moves(side)
+    text = list_all_possible_moves(side)
     lines = text.split("\n")
     
     for line in lines:
@@ -433,3 +433,4 @@ def start_display():
                     
                 read("Press space to hear the keyboard controls")
                 read("White starts")
+                

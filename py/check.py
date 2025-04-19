@@ -61,7 +61,7 @@ def all_possible_moves(side):
         
     return possible_moves
 
-def read_all_possible_moves(side):
+def list_all_possible_moves(side):
     text = ""
     long_side = "white" if side == 'W' else "black"
     reverse = "black" if long_side == "white" else "white"
