@@ -1,6 +1,6 @@
 from py.game import start_display
 import py.settings as settings
-from py.chess import create_board, is_in_check, is_in_check_mate
+from py.chess import create_board
 import py.engine as engine
 
 if __name__ == "__main__":

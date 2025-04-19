@@ -2,8 +2,9 @@ import pygame, sys
 import py.settings as settings
 import pyttsx3
 from py.chess import *
-from py.movement import move_manager
+from py.check import *
 import py.engine as sieng
+import msvcrt as kb
 
 # constant color values
 WHITE = (255,255,255)
@@ -21,9 +22,9 @@ FONT = None
 PIECE_FONT = None
 
 engine = pyttsx3.init()
-in_check = None
 possible_moves = []
 viewing_row = -1; viewing_col = -1 # for if the user is viewing the board
+game_over = False
 
 def displayBoard():
     pygame.draw.rect(SCREEN,LIGHTGREEN,(0,0,1920,1080)) # set background color
@@ -71,6 +72,7 @@ def displayRows():
 # reads out given text with the text to speech
 def read(text):
     engine.setProperty('rate', 400)  #change this to be slower later
+    if kb.kbhit(): exit()
     engine.say(text)
     engine.runAndWait()
     engine.stop()
@@ -129,6 +131,15 @@ def read_off_list():
             side = "Black" if i.piece.side == "B" else "White"
             read(f'{i.location} {side} {i.piece.type}') # read location side and piece
         else: read(i.location) # if there is no piece just read the location
+        
+def read_off_rules():
+    text = "To move a piece- enter that pieces location (ie A6), afterwards you will be told if" \
+            + "you can move it or not. If you can, enter in another location to move the piece" \
+            + "When selecting a piece to move, all its possible moves will be listed out- you can press q to interrupt this list" \
+            + "You can use the arrow keys to move around the board and hear what is on each tile" \
+            + "You can press / to restart the game"
+    
+    read(text)
 
 # if the user has typed in a row col combination
 def handle_moving_start(tile_to_move):
@@ -143,7 +154,7 @@ def handle_moving_start(tile_to_move):
     else:
         side = "Black" if tile.piece.side == "B" else "White" if tile.piece.side == "W" else ""
         read(f'Selected {tile_to_move} {side} {tile.piece.type}') # reads off the location color and piece
-        possible_moves = move_manager(tile) # gets where the piece on the given tile can move to
+        possible_moves = get_movement(tile) # gets where the piece on the given tile can move to
     
         if len(possible_moves) > 0:
             read("The piece on this tile can move to")
@@ -158,7 +169,7 @@ def handle_moving_start(tile_to_move):
 
 # handles selecting where a piece can move to
 def handle_moving_end(tile_to_move, tile_to_move_to):
-    global possible_moves; global in_check
+    global possible_moves; global game_over
 
     starting_tile = get_tile_from_location(tile_to_move)
     ending_tile = get_tile_from_location(tile_to_move_to)
@@ -170,28 +181,42 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
         move(starting_tile, ending_tile)  # move the piece on the tile to the new tile 
         
         if is_in_check('W') is not False: # is_in_check will return a list if not false
-            in_check = 'W'
             if is_in_check_mate('W'): # only check for checkmate if in check
-                read("White in checkmate")
+                read("White in checkmate. The game is over you have lost. Press / to restart the game.")
+                game_over = True
             else: read("White in check")
 
         elif is_in_check('B') is not False: # is_in_check will return a list if not false
-            in_check = 'B'
             if is_in_check_mate('B'): # only check for checkmate if in check
-                read("Black in checkmate")
+                read("Black in checkmate. The game is over you have won. Press / to restart the game.")
+                game_over = True
             else: read("Black in check")
-        else: in_check = None
         
         read("It is now the other player's turn")
     else:
         read(f'{tile_to_move_to} is an illegal move')
     
     possible_moves = []
-
+    
+def restart_game():
+    global possible_moves; global viewing_row; global viewing_col
+    
+    possible_moves = []
+    viewing_row = -1; viewing_col = -1
+    
+    settings.turn = 'W'
+    settings.board = create_board() # reset board
 
 def handle_presses(key_value, tile_to_move, tile_to_move_to):
     # if the pressed key is between a-h and there is nothing in the current tile tracking
-    if 97 <= int(key_value) <= 104 and len(tile_to_move) == 0 or (len(tile_to_move) == 2 and len(tile_to_move_to) == 0):
+    if game_over:
+        if key_value == 47:
+            restart_game()
+            tile_to_move = ""
+            tile_to_move_to = ""
+        elif key_value == 122:
+            read_off_rules()
+    elif 97 <= int(key_value) <= 104 and len(tile_to_move) == 0 or (len(tile_to_move) == 2 and len(tile_to_move_to) == 0):
         if len(tile_to_move) == 0:
             tile_to_move = chr(key_value)
         elif len(tile_to_move_to) == 0:
@@ -219,9 +244,16 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
     elif key_value == pygame.K_LEFT:
         # the player has moved their 'visual' adjust row col
         handle_arrow_view("L")
+    elif key_value == 47:
+        restart_game()
+        tile_to_move = ""
+        tile_to_move_to = ""
+    elif key_value == 122:
+        read_off_rules()
     else: 
         print(key_value)
         tile_to_move = ""
+        tile_to_move_to = ""
     
     return tile_to_move, tile_to_move_to
 
@@ -236,6 +268,8 @@ def start_display():
     
     tile_to_move = "" # for if the user is trying to select a tile
     tile_to_move_to = "" # for if the user is trying to select a tile to move to
+    
+    turn_one = True
 
     # a pygame loop that runs while the user is playing
     while True:
@@ -255,3 +289,7 @@ def start_display():
             displayColumns() # show column letters
             displayRows() # show row numbers
             pygame.display.flip() #update the board
+            
+            if turn_one:
+                read("Press Z to hear the keyboard controls")
+                turn_one = False

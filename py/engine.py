@@ -1,3 +1,4 @@
+import py.check as chck
 import py.chess as ch
 import random as rand
 import py.movement as movement
@@ -32,9 +33,9 @@ def rand_move(e):
                     target_tile = rand.choice(all_moves)
                     text = "opponent is moving the "+ rand_tile.piece.type + " on "+ rand_tile.location+ "to "+ target_tile.location
                     game.read(text)
-                    ch.move(rand_tile, target_tile)
+                    chck.move(rand_tile, target_tile)
                     break
-    if ch.is_in_check(settings.player_color):
+    if chck.is_in_check(settings.player_color):
         game.read("You are in check!")
 
 

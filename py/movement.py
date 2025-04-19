@@ -45,7 +45,7 @@ def move_manager(tile):
     elif (type == "King"):
         return kingMovement(tile)
     
-    return None
+    return []
 
 #returns list of all possible moves for a specific tile with a hypothetical piece on it
 def move_future(tile, type):
