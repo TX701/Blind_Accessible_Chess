@@ -4,7 +4,6 @@ import pyttsx3
 from py.chess import *
 from py.check import *
 import py.engine as sieng
-import msvcrt as kb
 
 # constant color values
 WHITE = (255,255,255)
@@ -25,6 +24,8 @@ engine = pyttsx3.init()
 possible_moves = []
 viewing_row = None; viewing_col = None # for if the user is viewing the board
 game_over = False
+voice_rate = 200
+opponent = None
 
 def displayBoard():
     pygame.draw.rect(SCREEN,LIGHTGREEN,(0,0,1920,1080)) # set background color
@@ -71,8 +72,9 @@ def displayRows():
 
 # reads out given text with the text to speech
 def read(text):
-    engine.setProperty('rate', 400)  #change this to be slower later
-    if kb.kbhit(): exit()
+    global voice_rate
+    
+    engine.setProperty('rate', voice_rate)  #change this to be slower later
     engine.say(text)
     engine.runAndWait()
     engine.stop()
@@ -81,6 +83,9 @@ def read(text):
 def turn_update():
     current_turn = "White" if settings.turn == "W" else "Black"
     read(f'{current_turn}\'s turn')
+    
+def tile_to_side(tile):
+   return "Black" if tile.piece.side == "B" else "White" if tile.piece.side == "W" else ""
 
 # for given a row and col return whats on the board in that location
 # used for the player to visualize whats on the board
@@ -90,8 +95,7 @@ def get_information():
     if -1 < viewing_row and viewing_row < 8 and -1 < viewing_col and viewing_col < 8:
         location = f'{chr(viewing_col + 65)}{8 - viewing_row }'
         type = settings.board[viewing_row][viewing_col].piece.type
-        side = "Black" if settings.board[viewing_row][viewing_col].piece.side == "B" else "White"
-        side_type = "nothing" if type == None else f'a {side} {type}'
+        side_type = "nothing" if type == None else f'a {tile_to_side(settings.board[viewing_row][viewing_col])} {type}'
 
         read(f'{location} contains {side_type}')
         
@@ -108,6 +112,19 @@ def get_information():
             read("Move up to return to the board")
         elif 7 < viewing_col:
             read("Move left to return to the board")
+            
+def read_board():
+    for row in range(len(settings.board)):
+        for col in range(len(settings.board[row])):
+            for event in pygame.event.get():
+                # if the user pressed q
+                if event.type == pygame.KEYDOWN:
+                    if event.key == 113:
+                        return None
+                
+            tile = settings.board[row][col]
+            text = f'{tile.location} nothing' if tile.piece.type == None else f'{tile.location} {tile_to_side(tile)} {tile.piece.type}'
+            read(text)
 
 # so the arrow keys can be used to move around the board and read off whats on each tile
 def handle_arrow_view(type):
@@ -143,19 +160,30 @@ def read_off_list():
                     return None
 
         if (i.piece.side != 'N'):
-            side = "Black" if i.piece.side == "B" else "White"
-            read(f'{i.location} {side} {i.piece.type}') # read location side and piece
+            read(f'{i.location} {tile_to_side(i)} {i.piece.type}') # read location side and piece
         else: read(i.location) # if there is no piece just read the location
         
-def read_off_rules():
-    text = "To move a piece- enter that pieces location (ie A6), afterwards you will be told if" \
-            + "you can move it or not. If you can, enter in another location to move the piece" \
-            + "When selecting a piece to move, all its possible moves will be listed out- you can press q to interrupt this list" \
-            + "You can use the arrow keys to move around the board and hear what is on each tile" \
-            + "You can press / to restart the game"
+def read_off_controls():
+    text = "To move a piece- enter that pieces location (ie A6), afterwards you will be told if you can move it or not.\n" \
+            + "If you can, enter in another location to move the piece\n" \
+            + "When selecting a piece to move, all its possible moves will be listed out. you can press Q to interrupt this list\n" \
+            + "You can use the arrow keys to move around the board and hear what is on each tile\n" \
+            + "You can press M to read off the entire board- you can press Q to stop reading\n" \
+            + "You can press / to restart the game\n" \
+            + "Press minus to decrease speech spead\n" \
+            + "Press plus to increase speech spead"
+            
+    lines = text.split("\n")
     
-    read(text)
-
+    for line in lines:
+        # if the side of the piece is not 'N' then there is a piece there
+        for event in pygame.event.get():
+             # if the user pressed a key
+            if event.type == pygame.KEYDOWN:
+                if event.key == 113:
+                    return None    
+        read(line)
+    
 # if the user has typed in a row col combination
 def handle_moving_start(tile_to_move):
     global possible_moves
@@ -167,8 +195,7 @@ def handle_moving_start(tile_to_move):
     elif tile.piece.side != settings.turn:
         read("This is the opponent's piece, you are not allowed to move it") 
     else:
-        side = "Black" if tile.piece.side == "B" else "White" if tile.piece.side == "W" else ""
-        read(f'Selected {tile_to_move} {side} {tile.piece.type}') # reads off the location color and piece
+        read(f'Selected {tile_to_move} {tile_to_side(tile)} {tile.piece.type}') # reads off the location color and piece
         possible_moves = get_movement(tile) # gets where the piece on the given tile can move to
     
         if len(possible_moves) > 0:
@@ -279,14 +306,17 @@ def restart_game():
     settings.board = create_board() # reset board
 
 def handle_presses(key_value, tile_to_move, tile_to_move_to):
-    # if the pressed key is between a-h and there is nothing in the current tile tracking
+    global voice_rate
+    
+    # if the game is over the controls will be limited
     if game_over:
         if key_value == 47:
             restart_game()
             tile_to_move = ""
             tile_to_move_to = ""
         elif key_value == 122:
-            read_off_rules()
+            read_off_controls()
+    # controls for if the game is ongoing
     elif key_value == pygame.K_UP:
         # the player has moved their 'visual' adjust row col
         handle_arrow_view("U")
@@ -317,8 +347,16 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
         restart_game()
         tile_to_move = ""
         tile_to_move_to = ""
+    elif key_value == 109:
+        read_board()
     elif key_value == 122:
-        read_off_rules()
+            read_off_controls()
+    elif key_value == 45:
+        if voice_rate > -50:
+            voice_rate -= 50
+    elif key_value == 61:
+        if voice_rate < 600:
+            voice_rate += 50
     else: 
         print(key_value)
         tile_to_move = ""
@@ -327,7 +365,8 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
     return tile_to_move, tile_to_move_to
 
 def start_display():
-    global viewing_row; global viewing_col; global SCREEN; global FONT; global PIECE_FONT; global game_over
+    global SCREEN; global FONT; global PIECE_FONT; 
+    global viewing_row; global viewing_col;  global game_over; global opponent
     pygame.init() # initalizing pygame
 
     # determing size and fonts
@@ -347,12 +386,13 @@ def start_display():
                 pygame.quit()
                 sys.exit()
 
-            if settings.turn != settings.player_color:
-                engine_move = sieng.rand_move(settings.eng) # now let the engine make a move
-                
-                if engine_move == -1:
-                    read("Black in checkmate. The game is over you have won. Press / to restart the game.")
-                    game_over = True
+            elif opponent == "Comp":
+                if settings.turn != settings.player_color:
+                    engine_move = sieng.rand_move(settings.eng) # now let the engine make a move
+                    
+                    if engine_move == -1:
+                        read("Black in checkmate. The game is over you have won. Press / to restart the game.")
+                        game_over = True
 
             # if the user pressed a key
             elif event.type == pygame.KEYDOWN:
@@ -364,5 +404,20 @@ def start_display():
             pygame.display.flip() #update the board
             
             if turn_one:
+                read("Press C to play against the computer, Press V to play side-by-side with a friend")
+
+                while(turn_one == True):
+                    for event in pygame.event.get():
+                        if event.type == pygame.KEYDOWN:
+                            if event.key == 99:
+                                opponent == "Comp"
+                                turn_one = False
+                                
+                            elif event.key == 118:
+                                opponent == "Frnd"
+                                turn_one = False
+                    print("opponet")
+                    
                 read("Press Z to hear the keyboard controls")
-                turn_one = False
+                read("White starts")
+                
