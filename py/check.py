@@ -50,6 +50,7 @@ def clean_list(tile, possible_moves):
             
     return allowed_moves
 
+# make version that can be used to read out
 def all_possible_moves(side):
     tiles = get_pieces(side)
     
@@ -59,6 +60,26 @@ def all_possible_moves(side):
         possible_moves.extend(get_movement(tile))
         
     return possible_moves
+
+def read_all_possible_moves(side):
+    text = ""
+    long_side = "white" if side == 'W' else "black"
+    reverse = "black" if long_side == "white" else "white"
+    
+    tiles = get_pieces(side)
+    possible_moves = []
+    
+    for tile in tiles:
+        possible_moves = get_movement(tile)
+        
+        if len(possible_moves) > 0:
+            text += f'{tile.location} {long_side} {tile.piece.type} can move to \n'
+            for move in possible_moves:
+                if move.piece.type == None:
+                    text += f'{move.location}\n'
+                else:
+                    text += f'{move.location} {reverse} {move.piece.type}\n'
+    return text
 
 def get_movement(tile):
     possible_moves = move_manager(tile)

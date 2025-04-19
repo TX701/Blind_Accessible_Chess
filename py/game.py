@@ -168,15 +168,27 @@ def read_off_controls():
             + "If you can, enter in another location to move the piece\n" \
             + "When selecting a piece to move, all its possible moves will be listed out. you can press Q to interrupt this list\n" \
             + "You can use the arrow keys to move around the board and hear what is on each tile\n" \
-            + "You can press M to read off the entire board- you can press Q to stop reading\n" \
-            + "You can press / to restart the game\n" \
+            + "You can press M to read off the entire board. you can press Q to stop reading\n" \
+            + "You can press question to read off all possible moves you can make. you can press Q to stop reading\n" \
+            + "You can press 0 to restart the game\n" \
             + "Press minus to decrease speech spead\n" \
             + "Press plus to increase speech spead"
             
     lines = text.split("\n")
     
     for line in lines:
-        # if the side of the piece is not 'N' then there is a piece there
+        for event in pygame.event.get():
+             # if the user pressed a key
+            if event.type == pygame.KEYDOWN:
+                if event.key == 113:
+                    return None    
+        read(line)
+        
+def all_moves(side):
+    text = read_all_possible_moves(side)
+    lines = text.split("\n")
+    
+    for line in lines:
         for event in pygame.event.get():
              # if the user pressed a key
             if event.type == pygame.KEYDOWN:
@@ -233,13 +245,13 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
         
         if is_in_check('W') is not False: # is_in_check will return a list if not false
             if is_in_check_mate('W'): # only check for checkmate if in check
-                read("White in checkmate. The game is over you have lost. Press / to restart the game.")
+                read("White in checkmate. The game is over you have lost. Press 0 to restart the game.")
                 game_over = True
             else: read("White in check")
 
         elif is_in_check('B') is not False: # is_in_check will return a list if not false
             if is_in_check_mate('B'): # only check for checkmate if in check
-                read("Black in checkmate. The game is over you have won. Press / to restart the game.")
+                read("Black in checkmate. The game is over you have won. Press 0 to restart the game.")
                 game_over = True
             else: read("Black in check")
         
@@ -310,7 +322,7 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
     
     # if the game is over the controls will be limited
     if game_over:
-        if key_value == 47:
+        if key_value == 48:
             restart_game()
             tile_to_move = ""
             tile_to_move_to = ""
@@ -343,10 +355,12 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
             tile_to_move_to += chr(key_value)
             handle_moving_end(tile_to_move, tile_to_move_to)
             tile_to_move = ""; tile_to_move_to = "" # reset tiles
-    elif key_value == 47:
+    elif key_value == 48:
         restart_game()
         tile_to_move = ""
         tile_to_move_to = ""
+    elif key_value == 47:
+        all_moves(settings.turn)
     elif key_value == 109:
         read_board()
     elif key_value == 122:
@@ -391,7 +405,7 @@ def start_display():
                     engine_move = sieng.rand_move(settings.eng) # now let the engine make a move
                     
                     if engine_move == -1:
-                        read("Black in checkmate. The game is over you have won. Press / to restart the game.")
+                        read("Black in checkmate. The game is over you have won. Press 0 to restart the game.")
                         game_over = True
 
             # if the user pressed a key
@@ -416,7 +430,6 @@ def start_display():
                             elif event.key == 118:
                                 opponent == "Frnd"
                                 turn_one = False
-                    print("opponet")
                     
                 read("Press Z to hear the keyboard controls")
                 read("White starts")
