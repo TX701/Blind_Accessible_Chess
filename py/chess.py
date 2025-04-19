@@ -1,5 +1,6 @@
 import py.settings as settings
 from py.movement import move_manager, same_side
+from copy import deepcopy
 
 class Piece:
     def __init__(self, type, name, side):
@@ -64,13 +65,55 @@ def can_capture(capturing_side, tile_to_capture):
                 capture_piece.append(tile_with_piece)
 
     return capture_piece
+            
+# moves a piece and returns false if the side is still in check
+def can_move_test(tile, end_tile):
+    side = tile.piece.side
+    tile_original_piece = tile.piece
+    end_tile_original_piece = end_tile.piece
+    
+    end_tile.piece = tile_original_piece
+    tile.piece = tile.piece = Piece(None, " ", 'N')
+    
+    in_check = type(is_in_check(side)) is list
 
-def can_block(possible_check_tile, side_in_check):
-    # move all pieces in side_in_check to all their possible possible moves
-    # if one removes king from possible_check_tiles movement list- return true
-    # if nothing can prevent the king from being captured- return false
+    end_tile.piece = end_tile_original_piece
+    tile.piece = tile_original_piece
+    
+    if in_check:
+        return False # in_check is a list- so the piece is still in check moving did not help
+        
+    return True
 
-    return ""
+# returns true if moving the piece on the tile to the specificed tile will prevent a check
+def move_and_check_for_check(tile_to_move, tile_to_move_to):
+    if can_move_test(tile_to_move, tile_to_move_to):
+        return True # there is a possible move that puts the king not in check
+    
+    return False
+
+# returns true if there is a possible move the piece on the tile can make that will prevent a check
+def can_move(tile):
+    tile_moves = move_manager(tile)
+    
+    # if the king cannot move at all then it can move out of the way
+    if len(tile_moves) == 0:
+        return False
+    
+    for move_tile in tile_moves:
+        if move_and_check_for_check(tile, move_tile):
+            return True
+        
+    return False
+
+def can_block(side_in_check):
+    check_side_piece_tiles = get_pieces(side_in_check)
+    
+    for tile in check_side_piece_tiles:
+        if can_move(tile):
+            return True
+
+    return False
     
 #checks if given side is in check
 def is_in_check(side):
@@ -85,9 +128,10 @@ def is_in_check(side):
 # takes in a side and returns true if that side is in checkmate false if that side has possible moves to get out of checkmate
 def is_in_check_mate(side):
     check_pieces = is_in_check(side) # will be False if not in check- returns a list of tiles if in check
-
     if type(check_pieces) is list:
-        if len(check_pieces) > 1:
+        if can_move(get_king(side)):
+            return False # if the king can move out of the way- it is not in check
+        elif len(check_pieces) > 1:
             return True # if the list is bigger than 1, multiple pieces are attacking the king and the player cannot protect the king (fact check this)
         elif len(check_pieces) == 1:
             # if the list is a single element, check if that element can be caputured
@@ -95,11 +139,11 @@ def is_in_check_mate(side):
             if len(can_capture_check) > 0:
                 return False
             else: 
-                if can_block:
+                if can_block(side):
                     return False
                 else: return True
     
-    return False
+    return True
 
 tiles = []
 
@@ -118,10 +162,6 @@ def tile_set_up():
         tiles.append(Tile(i - 8, 1, convert_to_location(i - 8, 1), Piece("Pawn", "♟", 'B')))
         tiles.append(Tile(i - 8, 6, convert_to_location(i - 8, 6), Piece("Pawn", "♙", 'W')))
 
-    # tiles.append(Tile(3, 1, convert_to_location(3, 1), Piece("Pawn", "♙", 'W')))
-    # tiles.append(Tile(4, 1, convert_to_location(4, 1), Piece("Pawn", "♙", 'W')))
-    # tiles.append(Tile(5, 1, convert_to_location(5, 1), Piece("Pawn", "♙", 'W')))
-
     tiles.append(Tile(0, 7, "A1", Piece("Rook", "♖", 'W')))
     tiles.append(Tile(1, 7, "B1", Piece("Knight", "♘", 'W')))
     tiles.append(Tile(2, 7, "C1", Piece("Bishop", "♗", 'W')))
@@ -130,6 +170,55 @@ def tile_set_up():
     tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♗", 'W')))
     tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
     tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
+    
+# # testing check formation
+# def tile_set_up():
+#     tiles.append(Tile(0, 0, "A8", Piece("Rook", "♜", 'B')))
+#     tiles.append(Tile(1, 0, "B8", Piece("Knight", "♞", 'B')))
+#     tiles.append(Tile(2, 0, "C8", Piece("Bishop", "♝", 'B')))
+#     tiles.append(Tile(3, 0, "D8", Piece("Queen", "♛", 'B')))
+#     tiles.append(Tile(4, 0, "E8", Piece("King", "♚", 'B')))
+#     tiles.append(Tile(5, 0, "F8", Piece("Bishop", "♝", 'B')))
+#     tiles.append(Tile(6, 0, "G8", Piece("Knight", "♞", 'B')))
+#     tiles.append(Tile(7, 0, "H8", Piece("Rook", "♜", 'B')))
+        
+#     tiles.append(Tile(5, 2, convert_to_location(5, 2), Piece("Pawn", "♙", 'W')))
+
+#     tiles.append(Tile(0, 7, "A1", Piece("Rook", "♖", 'W')))
+#     tiles.append(Tile(1, 7, "B1", Piece("Knight", "♘", 'W')))
+#     tiles.append(Tile(2, 7, "C1", Piece("Bishop", "♗", 'W')))
+#     tiles.append(Tile(3, 7, "D1", Piece("Queen", "♕", 'W')))
+#     tiles.append(Tile(4, 7, "E1", Piece("King", "♔", 'W')))
+#     tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♗", 'W')))
+#     tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
+#     tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
+
+# # testing checkmate formation
+# def tile_set_up():
+#     tiles.append(Tile(0, 0, "A8", Piece("Rook", "♜", 'B')))
+#     tiles.append(Tile(1, 0, "B8", Piece("Knight", "♞", 'B')))
+#     tiles.append(Tile(2, 0, "C8", Piece("Bishop", "♝", 'B')))
+#     tiles.append(Tile(3, 0, "D8", Piece("Queen", "♛", 'B')))
+#     tiles.append(Tile(4, 0, "E8", Piece("King", "♚", 'B')))
+#     tiles.append(Tile(5, 0, "F8", Piece("Bishop", "♝", 'B')))
+#     tiles.append(Tile(6, 0, "G8", Piece("Knight", "♞", 'B')))
+#     tiles.append(Tile(7, 0, "H8", Piece("Rook", "♜", 'B')))
+        
+#     tiles.append(Tile(5, 1, convert_to_location(5, 1), Piece("Pawn", "♙", 'W')))
+#     tiles.append(Tile(5, 2, convert_to_location(5, 2), Piece("Pawn", "♙", 'W')))
+#     tiles.append(Tile(4, 1, convert_to_location(4, 1), Piece("Pawn", "♙", 'W')))
+#     tiles.append(Tile(4, 2, convert_to_location(4, 2), Piece("Pawn", "♙", 'W')))
+#     tiles.append(Tile(3, 1, convert_to_location(3, 1), Piece("Pawn", "♙", 'W')))
+#     tiles.append(Tile(3, 2, convert_to_location(3, 2), Piece("Pawn", "♙", 'W')))
+
+#     tiles.append(Tile(0, 7, "A1", Piece("Rook", "♖", 'W')))
+#     tiles.append(Tile(1, 7, "B1", Piece("Knight", "♘", 'W')))
+#     tiles.append(Tile(2, 7, "C1", Piece("Bishop", "♗", 'W')))
+#     tiles.append(Tile(3, 7, "D1", Piece("Queen", "♕", 'W')))
+#     tiles.append(Tile(4, 7, "E1", Piece("King", "♔", 'W')))
+#     tiles.append(Tile(5, 7, "F1", Piece("Bishop", "♗", 'W')))
+#     tiles.append(Tile(6, 7, "G1", Piece("Knight", "♘", 'W')))
+#     tiles.append(Tile(7, 7, "H1", Piece("Rook", "♖", 'W')))  
     
 # given a row and col returns what piece should be there (used when building the board)
 def get_tile(r, c):

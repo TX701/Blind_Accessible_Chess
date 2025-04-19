@@ -70,7 +70,7 @@ def displayRows():
 
 # reads out given text with the text to speech
 def read(text):
-    # engine.setProperty('rate', 400)  #change this to be slower later
+    engine.setProperty('rate', 400)  #change this to be slower later
     engine.say(text)
     engine.runAndWait()
     engine.stop()
@@ -167,19 +167,17 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
     if ending_tile in possible_moves:
         # confirm movement to player
         read(f'{starting_tile.location} {starting_tile.piece.type} moving to {tile_to_move_to}')
-        move(starting_tile, ending_tile)  # move the piece on the tile to the new tile
-
+        move(starting_tile, ending_tile)  # move the piece on the tile to the new tile 
         
-        
-        if is_in_check('W') is not False:
+        if is_in_check('W') is not False: # is_in_check will return a list if not false
             in_check = 'W'
-            if is_in_check_mate('W'):
+            if is_in_check_mate('W'): # only check for checkmate if in check
                 read("White in checkmate")
             else: read("White in check")
 
-        elif is_in_check('B') is not False:
+        elif is_in_check('B') is not False: # is_in_check will return a list if not false
             in_check = 'B'
-            if is_in_check_mate('B'):
+            if is_in_check_mate('B'): # only check for checkmate if in check
                 read("Black in checkmate")
             else: read("Black in check")
         else: in_check = None

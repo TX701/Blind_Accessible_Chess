@@ -150,10 +150,11 @@ def pawnMovement(tile_with_pawn):
         possible_moves.append(forward) # add the the array
 
         forward_forward = tile_math(tile_with_pawn, 0, row_movement * 2)
-        if get_type(forward_forward) == None:
-            if ((get_side(tile_with_pawn) == 'W' and tile_with_pawn.row == 6) or (get_side(tile_with_pawn) == 'B' and tile_with_pawn.row == 1)):
-                possible_moves.append(forward_forward)
-                # if the pawn is on the correct row and if we added the forward tile add the next forward tile
+        if forward_forward != None:
+            if get_type(forward_forward) == None:
+                if ((get_side(tile_with_pawn) == 'W' and tile_with_pawn.row == 6) or (get_side(tile_with_pawn) == 'B' and tile_with_pawn.row == 1)):
+                    possible_moves.append(forward_forward)
+                    # if the pawn is on the correct row and if we added the forward tile add the next forward tile
 
     return possible_moves
 
