@@ -23,7 +23,7 @@ PIECE_FONT = None
 
 engine = pyttsx3.init()
 possible_moves = []
-viewing_row = -1; viewing_col = -1 # for if the user is viewing the board
+viewing_row = None; viewing_col = None # for if the user is viewing the board
 game_over = False
 
 def displayBoard():
@@ -87,32 +87,47 @@ def turn_update():
 def get_information():
     global viewing_row; global viewing_col
 
-    location = f'{chr(viewing_col + 65)}{8 - viewing_row }'
-    type = settings.board[viewing_row][viewing_col].piece.type
-    side = "Black" if settings.board[viewing_row][viewing_col].piece.side == "B" else "White"
-    side_type = "nothing" if type == None else f'a {side} {type}'
+    if -1 < viewing_row and viewing_row < 8 and -1 < viewing_col and viewing_col < 8:
+        location = f'{chr(viewing_col + 65)}{8 - viewing_row }'
+        type = settings.board[viewing_row][viewing_col].piece.type
+        side = "Black" if settings.board[viewing_row][viewing_col].piece.side == "B" else "White"
+        side_type = "nothing" if type == None else f'a {side} {type}'
 
-    read(f'{location} contains {side_type}')
+        read(f'{location} contains {side_type}')
+        
+        if settings.board[viewing_row][viewing_col] in possible_moves:
+            read("This is a possible move")
+    else: 
+        read("You are off the board")
+        
+        if viewing_row < 0:
+            read("Move down to return to the board")
+        elif viewing_col < 0:
+            read("Move right to return to the board")
+        elif 7 < viewing_row:
+            read("Move up to return to the board")
+        elif 7 < viewing_col:
+            read("Move left to return to the board")
 
 # so the arrow keys can be used to move around the board and read off whats on each tile
 def handle_arrow_view(type):
     global viewing_row; global viewing_col
 
-    if viewing_row == -1 or viewing_col == -1:
+    if viewing_row == None or viewing_col == None:
         # if the player has not used the arrow keys yet start them in the top left corner
         viewing_row = 0; viewing_col = 0 
     elif (type == "U"):
         # if the player is not going to go off the board move them one up
-        viewing_row = viewing_row - 1 if viewing_row != 0 else viewing_row
+        viewing_row = viewing_row - 1 if viewing_row != -1 else viewing_row
     elif (type == "R"):
         # if the player is not going to go off the board move them one to the right
-        viewing_col = viewing_col + 1 if viewing_col != 7 else viewing_col
+        viewing_col = viewing_col + 1 if viewing_col != 8 else viewing_col
     elif (type == "D"):
         # if the player is not going to go off the board move them one down
-        viewing_row = viewing_row + 1 if viewing_row != 7 else viewing_row
+        viewing_row = viewing_row + 1 if viewing_row != 8 else viewing_row
     elif (type == "L"):
         # if the player is not going to go off the board move them one to the left
-        viewing_col = viewing_col - 1 if viewing_col != 0 else viewing_col
+        viewing_col = viewing_col - 1 if viewing_col != -1 else viewing_col
         
     get_information() # return what the given row col contains
 
@@ -272,6 +287,18 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
             tile_to_move_to = ""
         elif key_value == 122:
             read_off_rules()
+    elif key_value == pygame.K_UP:
+        # the player has moved their 'visual' adjust row col
+        handle_arrow_view("U")
+    elif key_value == pygame.K_RIGHT:
+        # the player has moved their 'visual' adjust row col
+        handle_arrow_view("R")
+    elif key_value == pygame.K_DOWN:
+        # the player has moved their 'visual' adjust row col
+        handle_arrow_view("D")
+    elif key_value == pygame.K_LEFT:
+        # the player has moved their 'visual' adjust row col
+        handle_arrow_view("L")
     elif 97 <= int(key_value) <= 104 and len(tile_to_move) == 0 or (len(tile_to_move) == 2 and len(tile_to_move_to) == 0):
         if len(tile_to_move) == 0:
             tile_to_move = chr(key_value)
@@ -285,21 +312,7 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
         elif len(tile_to_move_to) == 1:
             tile_to_move_to += chr(key_value)
             handle_moving_end(tile_to_move, tile_to_move_to)
-
             tile_to_move = ""; tile_to_move_to = "" # reset tiles
-        
-    elif key_value == pygame.K_UP:
-        # the player has moved their 'visual' adjust row col
-        handle_arrow_view("U")
-    elif key_value == pygame.K_RIGHT:
-        # the player has moved their 'visual' adjust row col
-        handle_arrow_view("R")
-    elif key_value == pygame.K_DOWN:
-        # the player has moved their 'visual' adjust row col
-        handle_arrow_view("D")
-    elif key_value == pygame.K_LEFT:
-        # the player has moved their 'visual' adjust row col
-        handle_arrow_view("L")
     elif key_value == 47:
         restart_game()
         tile_to_move = ""
