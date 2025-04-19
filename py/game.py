@@ -74,7 +74,7 @@ def displayRows():
 def read(text):
     global voice_rate
     
-    engine.setProperty('rate', voice_rate)
+    engine.setProperty('rate', voice_rate)  #change this to be slower later
     engine.say(text)
     engine.runAndWait()
     engine.stop()
@@ -341,13 +341,13 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
     elif key_value == pygame.K_LEFT:
         # the player has moved their 'visual' adjust row col
         handle_arrow_view("L")
-    elif 97 <= int(key_value) <= 104 and len(tile_to_move) == 0 or (97 <= int(key_value) <= 104 and len(tile_to_move) == 2 and len(tile_to_move_to) == 0):
+    elif 97 <= int(key_value) <= 104 and (len(tile_to_move) == 0 or len(tile_to_move) == 2 and len(tile_to_move_to) == 0):
         if len(tile_to_move) == 0:
             tile_to_move = chr(key_value)
         elif len(tile_to_move_to) == 0:
             tile_to_move_to = chr(key_value)
     # if the pressed key is between 1-8 and a-h was selected before
-    elif 49 <= int(key_value) <= 56 and len(tile_to_move) == 1 or (97 <= int(key_value) <= 104 and len(tile_to_move) == 2 and len(tile_to_move_to) == 1):
+    elif 49 <= int(key_value) <= 56 and (len(tile_to_move) == 1 or len(tile_to_move) == 2 and len(tile_to_move_to) == 1):
         if len(tile_to_move) == 1:
             tile_to_move += chr(key_value)
             tile_to_move = handle_moving_start(tile_to_move) # we have a chess location and will start the move process
@@ -363,7 +363,7 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
         all_moves(settings.turn)
     elif key_value == 109:
         read_board()
-    elif key_value == 122:
+    elif key_value == 34:
             read_off_controls()
     elif key_value == 45:
         if voice_rate > -50:
@@ -431,6 +431,6 @@ def start_display():
                                 opponent == "Frnd"
                                 turn_one = False
                     
-                read("Press Z to hear the keyboard controls")
+                read("Press space to hear the keyboard controls")
                 read("White starts")
                 
