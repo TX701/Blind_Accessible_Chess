@@ -74,12 +74,31 @@ def move(tile, end_tile):
         if end_tile.piece.side != settings.turn:
             end_tile.piece = tile.piece  # for the tile youre moving to, change its piece to the given tiles piece
             tile.piece = Piece(None, " ", 'N')  # for the given tile set its piece to an empty Piece
-    
-    # changes the turn
-        if settings.turn == 'W':
-            settings.turn = 'B'
-        else:
-            settings.turn = 'W'
+            
+    if end_tile.piece.type == "Pawn" and end_tile.row == 0 or end_tile.row == 7:
+        return True
+
+    return False
+
+def promotion(tile_with_pawn, type):
+    if tile_with_pawn.piece.side == 'W':
+        if type == "Rook":
+            tile_with_pawn.piece = Piece("Rook", "♖", 'W')
+        elif type == "Knight":
+            tile_with_pawn.piece = Piece("Knight", "♘", 'W')
+        elif type == "Bishop":
+            tile_with_pawn.piece = Piece("Bishop", "♗", 'W')
+        elif type == "Queen":
+            tile_with_pawn.piece = Piece("Queen", "♕", 'W')
+    elif tile_with_pawn.piece.side == 'B':
+        if type == "Rook":
+            tile_with_pawn.piece = Piece("Rook", "♜", 'B')
+        elif type == "Knight":
+            tile_with_pawn.piece = Piece("Knight", "♞", 'B')
+        elif type == "Bishop":
+            tile_with_pawn.piece = Piece("Bishop", "♝", 'B') 
+        elif type == "Queen":
+            tile_with_pawn.piece = Piece("Queen", "♛", 'B')
 
 # get a sides king piece
 def get_king(side):
@@ -108,7 +127,7 @@ def is_in_check_mate(side):
     check_pieces = is_in_check(side) # will be False if not in check- returns a list of tiles if in check
     if type(check_pieces) is list:
         possible_moves = all_possible_moves(side)
-        print(possible_moves)
+ 
         if len(possible_moves) < 1:
             return True
     

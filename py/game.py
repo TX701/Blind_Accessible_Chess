@@ -178,7 +178,16 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
     if ending_tile in possible_moves:
         # confirm movement to player
         read(f'{starting_tile.location} {starting_tile.piece.type} moving to {tile_to_move_to}')
-        move(starting_tile, ending_tile)  # move the piece on the tile to the new tile 
+        promotion = move(starting_tile, ending_tile)  # move the piece on the tile to the new tile 
+        
+        if promotion == True:
+            handle_promotion(ending_tile)
+            
+        # changes the turn
+        if settings.turn == 'W':
+            settings.turn = 'B'
+        else:
+            settings.turn = 'W'
         
         if is_in_check('W') is not False: # is_in_check will return a list if not false
             if is_in_check_mate('W'): # only check for checkmate if in check
@@ -197,6 +206,53 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
         read(f'{tile_to_move_to} is an illegal move')
     
     possible_moves = []
+    
+def handle_promotion(tile):
+    displayBoard() # display whats on the board
+    displayColumns() # show column letters
+    displayRows() # show row numbers
+    pygame.display.flip() #update the board
+            
+    text = "Press q for queen\nPress r for rook\nPress b for bishop\nPress k for knight"
+    read(f'Your {tile.location} {tile.piece.type} can be promoted')
+    lines = text.split("\n")
+    
+    # the user can select while the possible options are being read
+    for line in lines:
+        for event in pygame.event.get():
+             # if the user pressed a key
+            if event.type == pygame.KEYDOWN:
+                if event.key == 98:
+                    promotion(tile, "Bishop")
+                    return True
+                if event.key == 107:
+                    promotion(tile, "Knight")
+                    return True
+                if event.key == 113:
+                    promotion(tile, "Queen")
+                    return True
+                if event.key == 114:
+                    promotion(tile, "Rook")
+                    return True
+        read(line)
+    
+    # for if the options have already been read
+    while(True):
+        for event in pygame.event.get():
+             # if the user pressed a key
+            if event.type == pygame.KEYDOWN:
+                if event.key == 98:
+                    promotion(tile, "Bishop")
+                    return True
+                if event.key == 107:
+                    promotion(tile, "Knight")
+                    return True
+                if event.key == 113:
+                    promotion(tile, "Queen")
+                    return True
+                if event.key == 114:
+                    promotion(tile, "Rook")
+                    return True
     
 def restart_game():
     global possible_moves; global viewing_row; global viewing_col
