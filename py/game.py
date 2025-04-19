@@ -326,7 +326,7 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
             restart_game()
             tile_to_move = ""
             tile_to_move_to = ""
-        elif key_value == 122:
+        elif key_value == pygame.K_SPACE:
             read_off_controls()
     # controls for if the game is ongoing
     elif key_value == pygame.K_UP:
@@ -363,7 +363,7 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
         all_moves(settings.turn)
     elif key_value == 109:
         read_board()
-    elif key_value == 34:
+    elif key_value == pygame.K_SPACE:
             read_off_controls()
     elif key_value == 45:
         if voice_rate > -50:
@@ -433,4 +433,3 @@ def start_display():
                     
                 read("Press space to hear the keyboard controls")
                 read("White starts")
-                
