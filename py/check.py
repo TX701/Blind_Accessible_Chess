@@ -44,7 +44,8 @@ def can_move_test(tile, end_tile):
 def clean_list(tile, possible_moves):
     allowed_moves = []
     for move in possible_moves:
-        if can_move_test(tile, move):
+        # only allow move if it is not the same side and if it will not case a check
+        if can_move_test(tile, move) and tile.piece.side != move.piece.side:
             allowed_moves.append(move)
             
     return allowed_moves

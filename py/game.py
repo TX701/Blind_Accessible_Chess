@@ -258,7 +258,7 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
     return tile_to_move, tile_to_move_to
 
 def start_display():
-    global viewing_row; global viewing_col; global SCREEN; global FONT; global PIECE_FONT
+    global viewing_row; global viewing_col; global SCREEN; global FONT; global PIECE_FONT; global game_over
     pygame.init() # initalizing pygame
 
     # determing size and fonts
@@ -279,7 +279,11 @@ def start_display():
                 sys.exit()
 
             if settings.turn != settings.player_color:
-                sieng.rand_move(settings.eng) # now let the engine make a move
+                engine_move = sieng.rand_move(settings.eng) # now let the engine make a move
+                
+                if engine_move == -1:
+                    read("Black in checkmate. The game is over you have won. Press / to restart the game.")
+                    game_over = True
 
             # if the user pressed a key
             elif event.type == pygame.KEYDOWN:

@@ -47,23 +47,6 @@ def move_manager(tile):
     
     return []
 
-#returns list of all possible moves for a specific tile with a hypothetical piece on it
-def move_future(tile, type):
-    if (type == "Pawn"):
-        return pawnMovement(tile)
-    elif (type == "Rook"):
-        return rookMovement(tile)
-    elif (type == "Knight"):
-        return knightMovement(tile)
-    elif (type == "Bishop"):
-        return bishopMovement(tile)
-    elif (type == "Queen"):
-        return queenMovement(tile)
-    elif (type == "King"):
-        return kingMovement(tile)
-
-    return None
-
 # from the perspective of a piece makes a vector using a col or row increment which will be 0, -1, or 1
 def get_line(start, col_inc, row_inc):
     line = []

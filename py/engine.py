@@ -28,13 +28,15 @@ def rand_move(e):
 
         if rand_tile.piece != None:
             if rand_tile.piece.side == settings.eng.side:
-                all_moves = movement.move_manager(rand_tile)
+                all_moves = chck.get_movement(rand_tile)
                 if len(all_moves) > 0:
                     target_tile = rand.choice(all_moves)
                     text = "opponent is moving the "+ rand_tile.piece.type + " on "+ rand_tile.location+ "to "+ target_tile.location
                     game.read(text)
                     chck.move(rand_tile, target_tile)
                     break
+                else:
+                    return -1
     if chck.is_in_check(settings.player_color):
         game.read("You are in check!")
 
