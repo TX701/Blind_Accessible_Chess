@@ -1,17 +1,9 @@
-import pygame
-import settings
-from chess import create_board, print_board, is_in_check, check_mate, get_pieces, block_check
-from movement import move_manager, same_side
+from py.game import start_display
+import py.settings as settings
+from py.chess import create_board
 
-def main():
-    settings.init()
-    settings.board = create_board()
-    print_board()
-
-    print(is_in_check('W'))
-    
 if __name__ == "__main__":
-    main()
+    settings.init() # creating the board global variable
+    settings.board = create_board() # creating the board with the inital piece
 
-
-# Start of Sam's UI (and anything else) code. I'm creating my own methods and stuff so that we can move things around easily.
+    start_display() # starting the display and game loop
