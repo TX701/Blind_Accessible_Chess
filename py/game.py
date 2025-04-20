@@ -245,17 +245,18 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
         
         if is_in_check('W') is not False: # is_in_check will return a list if not false
             if is_in_check_mate('W'): # only check for checkmate if in check
-                read("White in checkmate. The game is over you have lost. Press 0 to restart the game.")
+                read("White in checkmate. The game is over. Black has won. Press 0 to restart the game.")
                 game_over = True
             else: read("White in check")
 
         elif is_in_check('B') is not False: # is_in_check will return a list if not false
             if is_in_check_mate('B'): # only check for checkmate if in check
-                read("Black in checkmate. The game is over you have won. Press 0 to restart the game.")
+                read("Black in checkmate. The game is over. White has won. Press 0 to restart the game.")
                 game_over = True
             else: read("Black in check")
         
-        read("It is now the other player's turn")
+        if not game_over:
+            read("It is now the other player's turn")
     else:
         read(f'{tile_to_move_to} is an illegal move')
     
@@ -268,7 +269,7 @@ def handle_promotion(tile):
     pygame.display.flip() #update the board
             
     text = "Press q for queen\nPress r for rook\nPress b for bishop\nPress k for knight"
-    read(f'Your {tile.location} {tile.piece.type} can be promoted')
+    read(f'Your {tile.piece.type} can be promoted')
     lines = text.split("\n")
     
     # the user can select while the possible options are being read

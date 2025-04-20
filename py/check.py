@@ -92,11 +92,12 @@ def get_movement(tile):
 # simple move function
 def move(tile, end_tile):
     if tile.piece.type != None:  # if the tile (with the piece you want to move) has a piece
+        piece = tile.piece
         if end_tile.piece.side != settings.turn:
-            end_tile.piece = tile.piece  # for the tile youre moving to, change its piece to the given tiles piece
+            end_tile.piece = piece  # for the tile youre moving to, change its piece to the given tiles piece
             tile.piece = Piece(None, " ", 'N')  # for the given tile set its piece to an empty Piece
-            
-    if end_tile.piece.type == "Pawn" and end_tile.row == 0 or end_tile.row == 7:
+    
+    if piece.type == "Pawn" and (end_tile.row == 0 or end_tile.row == 7):
         return True
 
     return False
