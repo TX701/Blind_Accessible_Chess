@@ -15,7 +15,9 @@ YELLOW = (255,255,143)
 BLUE = (30,144,255)
 
 # determing size and fonts
-WINDOW_SIZE = (1920, 1000) 
+#WINDOW_SIZE = (400, 1000) 
+#USR_X = 1920
+#USR_Y = 1000
 SCREEN = None
 FONT = None
 PIECE_FONT = None
@@ -27,25 +29,39 @@ game_over = False
 voice_rate = 200
 opponent = None
 
+#Sam's Global Vars
+logArray = []
+curLog = 0
+
+# Method to display the board.
 def displayBoard():
-    pygame.draw.rect(SCREEN,LIGHTGREEN,(0,0,1920,1080)) # set background color
-    pygame.draw.rect(SCREEN,BLACK,(350,130,820,820), width = 10) # set chessboard color
+    #initializing some usr scren size dependent variables.
+    USR_X,USR_Y = WINDOW_SIZE
+    boardX = (360/1920) * USR_X
+    boardY = (140/1080) * USR_Y
+    tileX = (100/1920) * USR_X
+    tileY = (100/1080) * USR_Y
+
+    #Drawing background and board border.
+    pygame.draw.rect(SCREEN,LIGHTGREEN,((0,0),WINDOW_SIZE)) # set background color
+    pygame.draw.rect(SCREEN,BLACK,(boardX-10,boardY-10,((800/1920)*USR_X)+20,((800/1080)*USR_Y)+20), width = 10) # set chessboard color
 
     global viewing_row; global viewing_col
+    
     
     for r in range(8):
         for c in range(8):
             # to create the checkerboard pattern if r and c are both odd or both even color the tile tan
             if ((r % 2 == 0) and (c % 2 == 0)) or ((r % 2 == 1) and (c % 2 == 1)):
-                square = pygame.draw.rect(SCREEN, TAN, (360 + (r * 100), 140 + (c * 100), 100, 100))
+                square = pygame.draw.rect(SCREEN, TAN, (boardX + (r * tileX), boardY + (c * tileY), tileX, tileY))
             else:
-                square = pygame.draw.rect(SCREEN, BROWN, (360 + (r * 100), 140 + (c * 100), 100, 100))
+                square = pygame.draw.rect(SCREEN, BROWN, (boardX + (r * tileX), boardY + (c * tileY), tileX, tileY))
 
             if (viewing_row != -1 and viewing_col != -1) and c == viewing_row and r == viewing_col:
-                pygame.draw.rect(SCREEN, YELLOW, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the player is currently 'viewing' a tile- add a boarder to it
+                pygame.draw.rect(SCREEN, YELLOW, (boardX + (r * tileX), boardY + (c * tileY), tileX, tileY), 3) # if the player is currently 'viewing' a tile- add a boarder to it
 
             if settings.board[c][r] in possible_moves:
-                pygame.draw.rect(SCREEN, BLUE, (360 + (r * 100), 140 + (c * 100), 100, 100), 3) # if the selected piece can move to a tile- add a boarder to it
+                pygame.draw.rect(SCREEN, BLUE, (boardX + (r * tileX), boardY + (c * tileY), tileX, tileY), 3) # if the selected piece can move to a tile- add a boarder to it
 
             # set the text on the tile to be the current piece that is in that spot on the board
             text = PIECE_FONT.render(settings.board[c][r].piece.name, True, (0, 0, 0)) 
@@ -54,21 +70,99 @@ def displayBoard():
 
 # A-H display on top
 def displayColumns():
-    width = 410
+    USR_X, USR_Y = WINDOW_SIZE
+    width = ((360/1920)*USR_X) + ((50/1920)*USR_X)
     for i in range(1, 9):
         row = FONT.render(get_col_chess(i - 1), True, BLACK)
         w,h = FONT.size(get_col_chess(i))
-        SCREEN.blit(row,(width-w,110-(h/2)))
-        width += 100
+        SCREEN.blit(row,(width-(w/2),((110/1080)*USR_Y)-h))
+        width += ((100/1920)*USR_X)
 
 # 1-8 display on left
 def displayRows():
-    height = 190
+    USR_X, USR_Y = WINDOW_SIZE
+    height = ((140/1080)*USR_Y) + ((50/1080)*USR_Y)
     for i in range(1, 9):
         row = FONT.render(str(9-i), True, BLACK)
         w,h = FONT.size(str(9-i))
-        SCREEN.blit(row,(325-w,height-(h/2)))
-        height += 100
+        SCREEN.blit(row,(((325/1920)*USR_X)-w,height-(h/2)))
+        height += ((100/1080)*USR_Y)
+
+# Log Display
+def displayLog():
+    global logArray
+
+    #Creating special font for log
+    logFont = pygame.font.SysFont(None,30)
+
+    #Initializing some variables that are dependent on users screen size.
+    USR_X, USR_Y = WINDOW_SIZE
+    LogX = (1340/1920)*USR_X
+    LogY = (140/1080)*USR_Y
+    LogW = (400/1920)*USR_X
+    LogH = (800/1080)*USR_Y
+    offset = (100/1080) * USR_Y
+
+    #Drawing Log Background
+    pygame.draw.rect(SCREEN,BLACK,(LogX-10,LogY-10,LogW+20,LogH+20),width = 10)
+    pygame.draw.rect(SCREEN,WHITE,(LogX,LogY,LogW,LogH))
+
+    #Printing last seven movements.
+    if len(logArray) <= 7:
+        for i in range(len(logArray)):
+            log = logFont.render(logArray[i],True,BLACK)
+            w,h = logFont.size(logArray[i])
+            SCREEN.blit(log,(LogX + 15,(LogY+LogH) - ((i+1)*offset) - h/2))
+    else:
+        #A complicated way of trying to print the three logs "above" the curLog and the three logs "below" the current log.
+        height = 0
+        if (len(logArray) - 1 - curLog) >= 3:
+            t = 3
+        else:
+            t = len(logArray) - 1 - curLog
+        if (curLog >= 3):
+            b = -3
+        else:
+            b = 0 - curLog
+        for i in range (t,b,-1):
+            log = logFont.render(logArray[curLog + i],True,BLACK)
+            w,h = logFont.size(logArray[curLog + i])
+            SCREEN.blit(log,(LogX + 15,(LogY+offset) + height - h/2))
+            height += 100
+
+
+# log recording module.
+def logRecord(text):
+    global logArray; global curLog
+
+    logArray.append(text)
+
+# log movement handling module
+def handle_log(type):
+    global logArray; global curLog
+    if len(logArray) == 0:
+        read("No logs to change or read")
+        return
+
+    if len(logArray) == 1:
+        read(f"Reading only log")
+        read(logArray[curLog])
+        return
+
+    if type == "up" and curLog == (len(logArray)-1):
+        curLog += 1
+        read(f"Reading log {curLog+1}")
+        read(logArray[curLog])
+        return
+    elif type == "down" and curLog > 0:
+        curLog -= 1
+        read(f"Reading log {curLog+1}")
+        read(logArray[curLog])
+        return
+    else:
+        read("Cannot find further logs.")
+        return
+
 
 # reads out given text with the text to speech
 def read(text):
@@ -230,9 +324,14 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
 
     # if the new tile is one of the possible moves
     if ending_tile in possible_moves:
+        #Log code
+        logRecord(f'{starting_tile.location} {starting_tile.piece.type} moving to {tile_to_move_to}')
+        
         # confirm movement to player
         read(f'{starting_tile.location} {starting_tile.piece.type} moving to {tile_to_move_to}')
         promotion = move(starting_tile, ending_tile)  # move the piece on the tile to the new tile 
+
+        
         
         if promotion == True:
             handle_promotion(ending_tile)
@@ -247,13 +346,17 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
             if is_in_check_mate('W'): # only check for checkmate if in check
                 read("White in checkmate. The game is over. Black has won. Press 0 to restart the game.")
                 game_over = True
-            else: read("White in check")
+            else: 
+                read("White in check")
+                logRecord("White in check")
 
         elif is_in_check('B') is not False: # is_in_check will return a list if not false
             if is_in_check_mate('B'): # only check for checkmate if in check
                 read("Black in checkmate. The game is over. White has won. Press 0 to restart the game.")
                 game_over = True
-            else: read("Black in check")
+            else: 
+                read("Black in check")
+                logRecord("Black in check")
         
         if not game_over:
             read("It is now the other player's turn")
@@ -266,12 +369,19 @@ def handle_promotion(tile):
     displayBoard() # display whats on the board
     displayColumns() # show column letters
     displayRows() # show row numbers
+    displayLog() # show log
     pygame.display.flip() #update the board
             
     text = "Press q for queen\nPress r for rook\nPress b for bishop\nPress k for knight"
     read(f'Your {tile.piece.type} can be promoted')
     lines = text.split("\n")
     
+    #Code to handle log
+    if tile.piece.side == "b":
+        color = "black"
+    else:
+        color = "white"
+
     # the user can select while the possible options are being read
     for line in lines:
         for event in pygame.event.get():
@@ -279,15 +389,19 @@ def handle_promotion(tile):
             if event.type == pygame.KEYDOWN:
                 if event.key == 98:
                     promotion(tile, "Bishop")
+                    logRecord(f"{color} {tile.piece.type} promoted to Bishop")
                     return True
                 if event.key == 107:
                     promotion(tile, "Knight")
+                    logRecord(f"{color} {tile.piece.type} promoted to Knight")
                     return True
                 if event.key == 113:
                     promotion(tile, "Queen")
+                    logRecord(f"{color} {tile.piece.type} promoted to Queen")
                     return True
                 if event.key == 114:
                     promotion(tile, "Rook")
+                    logRecord(f"{color} {tile.piece.type} promoted to Rook")
                     return True
         read(line)
     
@@ -298,15 +412,19 @@ def handle_promotion(tile):
             if event.type == pygame.KEYDOWN:
                 if event.key == 98:
                     promotion(tile, "Bishop")
+                    logRecord(f"{color} {tile.piece.type} promoted to Bishop")
                     return True
                 if event.key == 107:
                     promotion(tile, "Knight")
+                    logRecord(f"{color} {tile.piece.type} promoted to Knight")
                     return True
                 if event.key == 113:
                     promotion(tile, "Queen")
+                    logRecord(f"{color} {tile.piece.type} promoted to Queen")
                     return True
                 if event.key == 114:
                     promotion(tile, "Rook")
+                    logRecord(f"{color} {tile.piece.type} promoted to Rook")
                     return True
     
 def restart_game():
@@ -319,7 +437,7 @@ def restart_game():
     settings.board = create_board() # reset board
 
 def handle_presses(key_value, tile_to_move, tile_to_move_to):
-    global voice_rate
+    global voice_rate; global curLog; global logArray
     
     # if the game is over the controls will be limited
     if game_over:
@@ -329,6 +447,7 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
             tile_to_move_to = ""
         elif key_value == pygame.K_SPACE:
             read_off_controls()
+
     # controls for if the game is ongoing
     elif key_value == pygame.K_UP:
         # the player has moved their 'visual' adjust row col
@@ -342,6 +461,19 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
     elif key_value == pygame.K_LEFT:
         # the player has moved their 'visual' adjust row col
         handle_arrow_view("L")
+
+    #Log controls
+    elif key_value == pygame.K_PAGEUP:
+        # Player is selecting a log one log up (so one log back)
+        handle_log("up")
+    elif key_value == pygame.K_PAGEDOWN:
+        # player is selecting a log one log down (so one log forward)
+        handle_log("down")
+    elif key_value == pygame.K_j:
+        # player wants to know the current log
+        read(f"Reading log {curLog}")
+        #read(logArray[curLog])
+
     elif 97 <= int(key_value) <= 104 and (len(tile_to_move) == 0 or len(tile_to_move) == 2 and len(tile_to_move_to) == 0):
         if len(tile_to_move) == 0:
             tile_to_move = chr(key_value)
@@ -381,8 +513,17 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
 
 def start_display():
     global SCREEN; global FONT; global PIECE_FONT; 
-    global viewing_row; global viewing_col;  global game_over; global opponent
+    global viewing_row; global viewing_col;  global game_over; global opponent;
+    global WINDOW_SIZE
     pygame.init() # initalizing pygame
+
+    #Acquiring user monitor deets.
+    USR_MONITOR = pygame.display.Info()
+    USR_X = USR_MONITOR.current_w
+    USR_Y = USR_MONITOR.current_h
+    SCREEN_CENTER = (USR_X/2,USR_Y/2)
+    WINDOW_SIZE = (USR_X,USR_Y)
+    print(USR_X,USR_Y,SCREEN_CENTER)
 
     # determing size and fonts
     SCREEN = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
@@ -416,6 +557,7 @@ def start_display():
             displayBoard() # display whats on the board
             displayColumns() # show column letters
             displayRows() # show row numbers
+            displayLog() # show log
             pygame.display.flip() #update the board
             
             if turn_one:
@@ -435,3 +577,11 @@ def start_display():
                 read("Press space to hear the keyboard controls")
                 read("White starts")
                 
+if __name__ == "__main__":
+    #Testing code exclusively for testing modules in the "game.py" file.
+    #Please Remove code you are testing when you are finished.
+    print("Test Begin")
+    print(USR_MONITOR,USR_X,USR_Y)
+
+    #Leave this print statement behind so that VScode doesn't freak for having an empty indent.
+    print("Test End")
