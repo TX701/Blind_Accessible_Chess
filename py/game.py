@@ -110,8 +110,8 @@ def displayLog():
     log_start = 0
     log_amt = len(logArray)
 
-    if log_amt > 26:
-        log_start = log_amt - 26
+    if log_amt > 10:
+        log_start = log_amt - 10
 
     line_offset = 10
     for i in range(log_start, log_amt):
