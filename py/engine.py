@@ -33,7 +33,7 @@ def rand_move(e):
                 all_moves = chck.get_movement(rand_tile)
                 if len(all_moves) > 0:
                     target_tile = rand.choice(all_moves)
-                    text = "opponent is moving the "+ rand_tile.piece.type + " on "+ rand_tile.location+ "to "+ target_tile.location
+                    text = "opponent is moving the "+ rand_tile.piece.type + " on "+ rand_tile.location + "to "+ target_tile.location
                     game.read(text)
                     chck.move(rand_tile, target_tile)
                     # changes the turn
@@ -42,8 +42,6 @@ def rand_move(e):
                     else:
                         settings.turn = 'W'
                         
-                    break
-    if chck.is_in_check(settings.player_color):
-        game.read("You are in check!")
+                    return f'B: {rand_tile.location} {target_tile.piece.type} moved to {target_tile.location}'
 
 

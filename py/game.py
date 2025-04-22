@@ -28,10 +28,10 @@ viewing_row = None; viewing_col = None # for if the user is viewing the board
 game_over = False
 voice_rate = 200
 opponent = None
+turn_one = True
 
-#Sam's Global Vars
 logArray = []
-curLog = 0
+curLog = -1
 
 # Method to display the board.
 def displayBoard():
@@ -88,14 +88,14 @@ def displayRows():
         SCREEN.blit(row,(((325/1920)*USR_X)-w,height-(h/2)))
         height += ((100/1080)*USR_Y)
 
-# Log Display
+# log Display
 def displayLog():
     global logArray
 
-    #Creating special font for log
+    # creating special font for log
     logFont = pygame.font.SysFont(None,30)
 
-    #Initializing some variables that are dependent on users screen size.
+    # initializing some variables that are dependent on users screen size.
     USR_X, USR_Y = WINDOW_SIZE
     LogX = (1340/1920)*USR_X
     LogY = (140/1080)*USR_Y
@@ -103,64 +103,51 @@ def displayLog():
     LogH = (800/1080)*USR_Y
     offset = (100/1080) * USR_Y
 
-    #Drawing Log Background
+    # drawing Log Background
     pygame.draw.rect(SCREEN,BLACK,(LogX-10,LogY-10,LogW+20,LogH+20),width = 10)
-    pygame.draw.rect(SCREEN,WHITE,(LogX,LogY,LogW,LogH))
+    pygame.draw.rect(SCREEN,BROWN,(LogX,LogY,LogW,LogH))
 
-    #Printing last seven movements.
-    if len(logArray) <= 7:
-        for i in range(len(logArray)):
-            log = logFont.render(logArray[i],True,BLACK)
-            w,h = logFont.size(logArray[i])
-            SCREEN.blit(log,(LogX + 15,(LogY+LogH) - ((i+1)*offset) - h/2))
-    else:
-        #A complicated way of trying to print the three logs "above" the curLog and the three logs "below" the current log.
-        height = 0
-        if (len(logArray) - 1 - curLog) >= 3:
-            t = 3
-        else:
-            t = len(logArray) - 1 - curLog
-        if (curLog >= 3):
-            b = -3
-        else:
-            b = 0 - curLog
-        for i in range (t,b,-1):
-            log = logFont.render(logArray[curLog + i],True,BLACK)
-            w,h = logFont.size(logArray[curLog + i])
-            SCREEN.blit(log,(LogX + 15,(LogY+offset) + height - h/2))
-            height += 100
+    log_start = 0
+    log_amt = len(logArray)
 
+    if log_amt > 26:
+        log_start = log_amt - 26
+
+    line_offset = 10
+    for i in range(log_start, log_amt):
+        if curLog == i:
+            log = logFont.render(logArray[i],True,YELLOW)
+        else: log = logFont.render(logArray[i],True,BLACK)
+        SCREEN.blit(log,(LogX + 20, LogY + line_offset))
+        line_offset += 30
 
 # log recording module.
 def logRecord(text):
     global logArray; global curLog
-
     logArray.append(text)
 
 # log movement handling module
 def handle_log(type):
     global logArray; global curLog
+
     if len(logArray) == 0:
         read("No logs to change or read")
         return
 
     if len(logArray) == 1:
-        read(f"Reading only log")
         read(logArray[curLog])
         return
 
-    if type == "up" and curLog == (len(logArray)-1):
-        curLog += 1
-        read(f"Reading log {curLog+1}")
-        read(logArray[curLog])
-        return
-    elif type == "down" and curLog > 0:
+    if type == "down" and curLog > 0:
         curLog -= 1
-        read(f"Reading log {curLog+1}")
-        read(logArray[curLog])
+        read(f'Log {curLog + 1}: {logArray[curLog]}')
+        return
+    elif type == "up" and curLog < (len(logArray) - 1):
+        curLog += 1
+        read(f'Log {curLog + 1}: {logArray[curLog]}')
         return
     else:
-        read("Cannot find further logs.")
+        read("Outside of log list bounds")
         return
 
 
@@ -264,6 +251,8 @@ def read_off_controls():
             + "You can use the arrow keys to move around the board and hear what is on each tile\n" \
             + "You can press M to read off the entire board. you can press Q to stop reading\n" \
             + "You can press question to read off all possible moves you can make. you can press Q to stop reading\n" \
+            + "You can press pageup to read through the log pageup moves you chronologically forward\n" \
+            + "pagedown moves you chronologically backwards\n" \
             + "You can press 0 to restart the game\n" \
             + "Press minus to decrease speech spead\n" \
             + "Press plus to increase speech spead"
@@ -321,17 +310,14 @@ def handle_moving_end(tile_to_move, tile_to_move_to):
 
     starting_tile = get_tile_from_location(tile_to_move)
     ending_tile = get_tile_from_location(tile_to_move_to)
-
     # if the new tile is one of the possible moves
     if ending_tile in possible_moves:
         #Log code
-        logRecord(f'{starting_tile.location} {starting_tile.piece.type} moving to {tile_to_move_to}')
+        logRecord(f'{starting_tile.piece.side}: {starting_tile.location} {starting_tile.piece.type} moved to {tile_to_move_to.upper()}')
         
         # confirm movement to player
         read(f'{starting_tile.location} {starting_tile.piece.type} moving to {tile_to_move_to}')
-        promotion = move(starting_tile, ending_tile)  # move the piece on the tile to the new tile 
-
-        
+        promotion = move(starting_tile, ending_tile)  # move the piece on the tile to the new tile    
         
         if promotion == True:
             handle_promotion(ending_tile)
@@ -378,9 +364,9 @@ def handle_promotion(tile):
     
     #Code to handle log
     if tile.piece.side == "b":
-        color = "black"
+        color = "Black"
     else:
-        color = "white"
+        color = "White"
 
     # the user can select while the possible options are being read
     for line in lines:
@@ -428,10 +414,12 @@ def handle_promotion(tile):
                     return True
     
 def restart_game():
-    global possible_moves; global viewing_row; global viewing_col
+    global possible_moves; global viewing_row; global viewing_col; global logArray; global turn_one
     
     possible_moves = []
+    logArray = []
     viewing_row = -1; viewing_col = -1
+    turn_one = True
     
     settings.turn = 'W'
     settings.board = create_board() # reset board
@@ -504,17 +492,20 @@ def handle_presses(key_value, tile_to_move, tile_to_move_to):
     elif key_value == 61:
         if voice_rate < 600:
             voice_rate += 50
-    else: 
-        print(key_value)
-        tile_to_move = ""
+    else:
         tile_to_move_to = ""
+
+        if len(tile_to_move_to) > 0:
+            tile_to_move = ""
+        
     
     return tile_to_move, tile_to_move_to
 
 def start_display():
     global SCREEN; global FONT; global PIECE_FONT; 
-    global viewing_row; global viewing_col;  global game_over; global opponent;
+    global viewing_row; global viewing_col;  global game_over; global opponent
     global WINDOW_SIZE
+    global turn_one
     pygame.init() # initalizing pygame
 
     #Acquiring user monitor deets.
@@ -523,7 +514,6 @@ def start_display():
     USR_Y = USR_MONITOR.current_h
     SCREEN_CENTER = (USR_X/2,USR_Y/2)
     WINDOW_SIZE = (USR_X,USR_Y)
-    print(USR_X,USR_Y,SCREEN_CENTER)
 
     # determing size and fonts
     SCREEN = pygame.display.set_mode(WINDOW_SIZE, pygame.RESIZABLE)
@@ -542,16 +532,17 @@ def start_display():
                 pygame.quit()
                 sys.exit()
 
-            elif opponent == "Comp":
+            if opponent == "Comp":
                 if settings.turn != settings.player_color:
                     engine_move = sieng.rand_move(settings.eng) # now let the engine make a move
-                    
                     if engine_move == -1:
                         read("Black in checkmate. The game is over you have won. Press 0 to restart the game.")
                         game_over = True
+                    else:
+                        logArray.append(engine_move)
 
             # if the user pressed a key
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 tile_to_move, tile_to_move_to = handle_presses(event.key, tile_to_move, tile_to_move_to)
 
             displayBoard() # display whats on the board
@@ -567,21 +558,12 @@ def start_display():
                     for event in pygame.event.get():
                         if event.type == pygame.KEYDOWN:
                             if event.key == 99:
-                                opponent == "Comp"
+                                opponent = "Comp"
                                 turn_one = False
                                 
                             elif event.key == 118:
-                                opponent == "Frnd"
+                                opponent = "Frnd"
                                 turn_one = False
                     
                 read("Press space to hear the keyboard controls")
                 read("White starts")
-                
-if __name__ == "__main__":
-    #Testing code exclusively for testing modules in the "game.py" file.
-    #Please Remove code you are testing when you are finished.
-    print("Test Begin")
-    print(USR_MONITOR,USR_X,USR_Y)
-
-    #Leave this print statement behind so that VScode doesn't freak for having an empty indent.
-    print("Test End")
